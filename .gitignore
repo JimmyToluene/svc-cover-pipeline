@@ -6,3 +6,4 @@ inst/
 output/
 __pycache__/
 refs/*.mp3
+.claude/
