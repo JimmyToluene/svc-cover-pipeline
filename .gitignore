@@ -1,0 +1,8 @@
+.idea/
+*.pth
+*.index
+vocal/
+inst/
+output/
+__pycache__/
+refs/*.mp3

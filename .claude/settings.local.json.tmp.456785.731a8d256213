@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'phase0: v1 照录分行 + mora 配额统计 \\(refs/mora_budget.tsv\\) + 待核对清单 *)"
+    ]
+  }
+}
