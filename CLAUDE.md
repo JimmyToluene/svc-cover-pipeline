@@ -3,7 +3,7 @@
 ## 项目目标
 
 产出一首完整的《念张师》日语填词版 AI 翻唱成品(WAV/FLAC + 可发布 MP4),
-音色为东雪莲(RVC 模型),源人声由 Synthesizer V 合成。
+音色为东雪莲(so-vits-svc 4.1 模型),源人声由 Synthesizer V 合成。
 
 最终交付物:
 
@@ -23,16 +23,17 @@
 - 因此最终歌词是爱音版填词的**衍生修订版**。个人自娱没有问题;
   若公开发布,必须署名原填词作者(视频 UP 主),最好事先打个招呼。
   这一条不可协商,写在成品 `docs/postmortem.md` 和发布文案里。
-- 东雪莲音色 = 用户本地已下载的 RVC v2 模型(路径见下)。该模型由真实歌声数据训练,
-  SVC 适性好。本工程仅限个人娱乐用途;若发布,遵守 B 站 AI 生成内容标注规则。
-- 用户懂 ML、懂日语基础、有本地 GPU。不要解释什么是 RVC,直接干活。
+- 东雪莲音色 = 用户本地已下载的 **so-vits-svc 4.1** 模型(路径见下)。该模型由
+  真实歌声数据训练,SVC 适性好。本工程仅限个人娱乐用途;若发布,遵守 B 站
+  AI 生成内容标注规则。
+- 用户懂 ML、懂日语基础、有本地 GPU。不要解释什么是 so-vits-svc,直接干活。
 
 ## 分工边界(重要)
 
 **Claude 负责(可自动化):**
 
 - 日语歌词创作、mora 对齐校验、罗马音生成
-- 所有脚本:音频批处理、RVC CLI 推理封装、ffmpeg 混音链、字幕文件生成
+- 所有脚本:音频批处理、so-vits-svc 推理封装、ffmpeg 混音链、字幕文件生成
 - 参数实验的记录与对比表
 
 **必须由用户手动完成(Claude 无法听音频,不要假装能):**
@@ -59,9 +60,10 @@ nenzhangshi-jp/
 │   └── final.md
 ├── vocal/
 │   ├── synthv_source.wav  # 用户从 SynthV 导出的干声
-│   └── rvc_out/           # 各参数组合的转换结果,文件名含参数
+│   └── svc_out/           # 各参数组合的转换结果,文件名含参数
 ├── models/
-│   └── higashi_yukiren/   # RVC 模型 (.pth + .index)
+│   └── higashi_yukiren/   # so-vits-svc 4.1 模型 (G_*.pth + config.json
+│                          #  + 可选 kmeans/特征检索 + 可选 diffusion)
 ├── inst/                  # 伴奏(用户提供或 UVR 分离)
 ├── scripts/
 ├── output/
@@ -119,18 +121,31 @@ SynthV 拆音/连音方案并标注。
   哪里 vibrato 收敛、张雪峰式"说教感"乐句用 tension 参数模拟)。
 - 用户导出 48kHz WAV 干声到 `vocal/synthv_source.wav`。
 - 声库选择建议:优先男声声库(张雪峰语录的说教感)或直接用接近东雪莲音域的女声库,
-  两条路线都试,RVC 变调负担小的优先。
+  两条路线都试,SVC 变调负担小的优先。
 - DoD:干声文件就位,用户确认发音无明显错误。
 
-### Phase 3 — RVC 音色转换
+### Phase 3 — SVC 音色转换(so-vits-svc 4.1)
 
-- 生成 `scripts/rvc_infer.py`:封装 RVC CLI 推理,参数网格化跑批,
-  输出文件名编码参数(如 `out_f0rmvpe_idx0.6_t0.wav`)。
-- 起始参数:f0 method = **rmvpe**;index rate 网格 {0.4, 0.6, 0.75};
+- 前置(用户准备):so-vits-svc **4.1-Stable** 本地 checkout 及其推理环境;
+  checkout 的 `pretrain/` 下放好:与模型 config.json `model.speech_encoder`
+  匹配的编码器权重(默认 vec768l12 → `checkpoint_best_legacy_500.pt`)、
+  `rmvpe.pt`;若用浅扩散或增强器,另需 `pretrain/nsf_hifigan/`。
+- `models/higashi_yukiren/` 放:`G_*.pth` + `config.json`(必需);可选
+  `kmeans_10000.pt`(聚类)或 `feature_and_index.pkl`(特征检索)、
+  扩散模型(`model_*.pt` + `diffusion.yaml`)。有什么脚本自动检测什么。
+- `scripts/svc_infer.py`:封装 `inference_main.py` 推理,参数网格跑批,
+  输出收集到 `vocal/svc_out/`,文件名编码参数
+  (如 `synthv_source_a_f0rmvpe_t+0_cr0.3km.wav`,km=聚类/fr=特征检索)。
+- 起始参数:f0 predictor = **rmvpe**(CLI 默认是 pm,必须显式传);
   transpose 按 Phase 2 所选声库与东雪莲音域差决定(先跑 0 和 ±12);
-  protect 0.33 起步(清辅音发糊时上调)。
-- 生成 `docs/rvc_grid.md` 对比表,用户盲听选优。
-- DoD:用户选定一版 → `vocal/rvc_out/selected.wav`。
+  聚类/特征检索占比 -cr 网格 {0, 0.3, 0.5}(越高越贴目标音色、咬字越糊;
+  模型没带 kmeans/index 就固定 0);noice_scale 0.4 不动。
+  **绝不开 -a(auto f0)**——唱歌必严重跑调;-eh 增强器不开
+  (对训练充分的模型是反效果)。
+- 模型带扩散时:同网格各加跑一版 -shd(浅扩散,k_step 100),
+  出电音/金属感时优先选浅扩散版。
+- 生成 `docs/svc_grid.md` 对比表,用户盲听选优。
+- DoD:用户选定一版 → `vocal/svc_out/selected.wav`。
 
 ### Phase 4 — 混音与出片
 
@@ -163,5 +178,5 @@ SynthV 拆音/连音方案并标注。
 | ------------------------------ | ----------------------------------------------------------- |
 | mora 配额估算错误导致歌词返工  | Phase 0 用户人工核对是硬门槛,不许跳                         |
 | SynthV 声库与东雪莲音域差过大  | Phase 2 双声库并行,Phase 3 变调网格覆盖                     |
-| RVC 模型训练数据不含歌唱高音区 | 东雪莲模型含真实歌声,风险低;若高音发虚,歌词侧可微调该句元音 |
+| SVC 模型训练数据不含歌唱高音区 | 东雪莲模型含真实歌声,风险低;若高音发虚,歌词侧可微调该句元音 |
 | 分离伴奏残留人声               | 优先找官方/UTAU 社区现成伴奏,分离是兜底                     |

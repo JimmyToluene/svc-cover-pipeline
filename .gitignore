@@ -1,6 +1,7 @@
 .idea/
 *.pth
 *.index
+models/
 vocal/
 inst/
 output/
