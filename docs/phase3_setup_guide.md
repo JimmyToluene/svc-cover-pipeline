@@ -5,8 +5,17 @@
 
 ## 线 2 — so-vits-svc 4.1 环境(可先做,做完能立刻冒烟测试)
 
+> 2026-07-04 实施记录(线 2 已完成,冒烟测试 2/2 通过,含浅扩散):
+> checkout 实际路径 `~/so-vits-sv`(少个 c),env=conda `sovits`
+> (python 3.10, **torch 2.5.1+cu124**——2.12 踩了两个时代坑后降级,见步骤 4)。
+> ffmpeg 装进了 env(conda-forge)而非系统,跑 svc_infer.py 时需
+> `PATH=~/miniforge3/envs/sovits/bin:$PATH` 前缀或先 activate。
+> vocoder 用标准版软链充当 finetuned(`nsf_hifigan_finetuned -> nsf_hifigan`)。
+> svc_infer.py 会给子进程注入 TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1(万一将来升 torch)。
+> 4090 实测:15s 音频每组合 4-5s,整张 6 组合网格约半分钟。
+
 ```bash
-# 1. 系统依赖(svc_infer.py 的输入下混要用,当前机器没装)
+# 1. 系统依赖(svc_infer.py 的输入下混要用;没 sudo 就 conda 装,见上方记录)
 sudo apt install -y ffmpeg unzip
 
 # 2. 独立环境(官方钉老版本 Python;3.10 实测 fairseq 还装得上,再高容易翻车)
@@ -17,9 +26,12 @@ conda activate sovits
 git clone -b 4.1-Stable --depth 1 https://github.com/svc-develop-team/so-vits-svc.git ~/so-vits-svc
 cd ~/so-vits-svc
 
-# 4. 依赖:先 torch 后 requirements;fairseq 装失败的话单独 pip install fairseq==0.12.2,
-#    还失败就把 env 重建成 python=3.9
-pip install torch torchaudio
+# 4. 依赖:先 torch 后 requirements。两个【实测坑】:
+#    (a) pip>=24.1 拒收 omegaconf 2.0.x 的老式元数据 → fairseq 解析无解,先降 pip;
+#    (b) torch 必须钉 2.5.1(与 sovits 4.1 同时代):torch>=2.6 的 weights_only
+#        默认值拒载 fairseq checkpoint,torchaudio>=2.9 的 load() 还要 torchcodec。
+pip install "pip<24.1"
+pip install torch==2.5.1 torchaudio==2.5.1
 pip install -r requirements.txt
 
 # 5. 两个必需权重 → pretrain/

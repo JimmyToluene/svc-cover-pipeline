@@ -18,6 +18,7 @@ import argparse
 import datetime
 import itertools
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -257,7 +258,11 @@ def main():
             before = ({p: p.stat().st_mtime for p in results_dir.glob("*.wav")}
                       if results_dir.is_dir() else {})
             t0 = time.time()
-            r = subprocess.run(cmd, cwd=svc_repo)
+            # torch>=2.6 默认 weights_only=True,会拒载 fairseq/ContentVec 等
+            # 2023 年代 checkpoint 里的自定义类;这些文件本就是用户选择信任的模型资产
+            r = subprocess.run(cmd, cwd=svc_repo,
+                               env={**os.environ,
+                                    "TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD": "1"})
             dur = time.time() - t0
             after = {p: p.stat().st_mtime for p in results_dir.glob("*.wav")}
             new = sorted((p for p, mt in after.items() if before.get(p) != mt),
