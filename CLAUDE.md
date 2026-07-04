@@ -149,11 +149,12 @@ SynthV 拆音/连音方案并标注。
 
 ### Phase 4 — 混音与出片
 
-- `scripts/mix.py`(ffmpeg/pedalboard):人声链 = 高通 80Hz → 轻压缩 →
+- `scripts/mix.py`(pedalboard/pyloudnorm):人声链 = 高通 80Hz → 轻压缩 →
   plate reverb(wet 15% 起)→ 与伴奏合轨,人声 -1~-2 LUFS 相对伴奏起步。
 - 伴奏获取,按优先级:(1) 找中文原版作者发布的官方伴奏/工程;
-  (2) 从 `refs/anon_version.mp3` 分离——它的人声是 RVC 干声混响,MDX-Net
-  分离难度低于真人演唱,`scripts/separate.py`(audio-separator 包)+ 去混响;
+  (2) 从 `refs/anon_version.mp3` 分离——它的人声是 SVC 干声混响,
+  分离难度低于真人演唱,`scripts/separate.py`(audio-separator 包,
+  BS-Roformer)+ 去混响;
   (3) 从中文原版音频分离。mp3 有损,分离后高频损失可接受(梗曲标准)。
 - 混音基准:成品与 `refs/anon_version.mp3` 做 A/B,人声电平、混响量、
   响度对齐到不劣于参照版。

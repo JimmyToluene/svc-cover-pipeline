@@ -1,0 +1,17 @@
+# Phase 4 混音/分离/出片依赖(scripts/separate.py, mix.py, make_subs.py, make_release.py)
+#
+# 注意:装在独立 env(如 conda phase4,python 3.11),不要装进 sovits env——
+# audio-separator 要 librosa>=0.10,与 so-vits-svc 钉的 librosa==0.9.1 冲突。
+# sovits 推理环境的搭建见 docs/phase3_setup_guide.md(不在本文件管理)。
+# make_subs.py / make_release.py 只用标准库 + 系统 ffmpeg。
+#
+#   conda create -n phase4 python=3.11 -y
+#   conda activate phase4
+#   pip install -r requirements.txt
+
+audio-separator[gpu]
+pedalboard
+pyloudnorm
+soundfile
+numpy
+resampy
