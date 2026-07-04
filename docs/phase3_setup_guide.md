@@ -76,21 +76,20 @@ python3 scripts/svc_infer.py --svc-repo ~/so-vits-svc \
    (づ/な 中时值长者对半拆给 け,け ≥ 1/16 音符)。
 5. 按 `docs/synthv_notes.md` 分段调教(主歌 A 克制 → 副歌 vibrato 直进颤出 →
    行 19 气声极值 → 行 20 说教感顶点 → 行 25 渐弱收)。全局 vibrato depth ~0.6 倍起。
-6. 双声库各导一版干声:**无混响、无效果器**,48kHz WAV →
-   `vocal/synthv_source_a.wav`(男声库)/ `_b.wav`(女声库)。
-   每路线做到"发音无错、乐句成立"即可先交转换,别过度精调。
+6. 导出干声(**女声库单路线**,2026-07-04 定案):**无混响、无效果器**,
+   48kHz WAV → `vocal/synthv_source.wav`(跑批脚本的默认输入)。
+   做到"发音无错、乐句成立"即可先交转换,别过度精调。
 7. 走完 `docs/synthv_notes.md` 文末的导出核对清单。
 
 ## 汇合 — Phase 3 网格与盲听
 
 ```bash
-# 每个声库各跑一次粗网格(约 6 个组合/声库:3 个变调 × 有无浅扩散)
-python3 scripts/svc_infer.py --svc-repo ~/so-vits-svc \
+# 女声库贴近东雪莲音域,先只跑 t=0(2 个组合:纯 sovits / 浅扩散)
+export PATH=~/miniforge3/envs/sovits/bin:$PATH
+python3 scripts/svc_infer.py --svc-repo ~/so-vits-sv \
     --python ~/miniforge3/envs/sovits/bin/python \
-    --input vocal/synthv_source_a.wav -t 0 12 -12
-python3 scripts/svc_infer.py --svc-repo ~/so-vits-svc \
-    --python ~/miniforge3/envs/sovits/bin/python \
-    --input vocal/synthv_source_b.wav -t 0 12 -12
+    --input vocal/synthv_source.wav -t 0
+# 听感发闷/发尖(疑八度不对)才补跑: ... -t 12 -12
 ```
 
 盲听 `vocal/svc_out/`,备注写进 `docs/svc_grid.md`。判断标准:

@@ -5,11 +5,11 @@
 
 ## 声库与全局设置
 
-- 双路线并行(CLAUDE.md 约定):**路线 A** 男声库(说教感占优,SVC 变调
-  负担看音域差);**路线 B** 接近东雪莲音域的女声库(SVC transpose≈0 优先)。
-  每路线只需做到"发音无错、乐句成立"即可交 Phase 3 试转,先别精调。
-- 工程采样率 48kHz,导出 48kHz WAV 干声(无混响!)→ `vocal/synthv_source.wav`。
-  路线 A/B 各导一版时命名 `synthv_source_a.wav` / `_b.wav`。
+- **2026-07-04 用户定案:女声库单路线**(原双路线方案作废)。选接近东雪莲
+  音域的女声库,SVC transpose≈0,变调负担最小;"说教感"靠 tension/断句处理,
+  不靠声库性别。做到"发音无错、乐句成立"即可交 Phase 3 试转,先别精调。
+- 工程采样率 48kHz,导出 48kHz WAV 干声(无混响!)→ `vocal/synthv_source.wav`
+  (svc_infer.py 的默认输入路径)。
 - 输入方式:逐句框选音符后粘贴 `synthv_input.txt` 对应行(空格分隔会按音符
   逐个分配);促音 t 若分配不对,把该音符歌词手动改成 っ 或音素 cl。
 - 全局参数起点:vibrato depth 全局先压到 ~0.6 倍(东雪莲原声 vibrato 不重,
