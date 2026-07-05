@@ -5,6 +5,8 @@
 - 首次运行若无该文件,自动生成待填模板后退出;
 - 时间写秒(85.3)或 分:秒(1:25.3)都行;结束留空 = 下一行开始前 0.1s,
   末行留空 = 开始 + --last-dur;
+- 行号带后缀 r(如 7r)= 该行歌词的重复演唱(副歌 reprise),可与本尊共存;
+- 音频里没唱到的行可以缺席,但必须加 --partial 明示(防止漏填时间轴);
 - 对轴参照:inst/vocals_ref_*.wav(分离出的爱音版人声)或 SynthV 工程小节时间。
 
 示例:
@@ -30,7 +32,7 @@ PlayResY: 1080
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: JP,Noto Sans CJK JP,64,&H00FFFFFF,&H00FFFFFF,&H00202020,&H80000000,0,0,0,0,100,100,0,0,1,3,0,2,60,60,96,1
-Style: CN,Noto Sans CJK SC,44,&H00D8D8D8,&H00FFFFFF,&H00202020,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,60,60,36,1
+Style: CN,Noto Sans CJK JP,44,&H00D8D8D8,&H00FFFFFF,&H00202020,&H80000000,0,0,0,0,100,100,0,0,1,2,0,2,60,60,36,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -98,6 +100,8 @@ def main():
     ap.add_argument("--shift", type=float, default=0.0, help="整体平移秒数,正=延后")
     ap.add_argument("--gap", type=float, default=0.1, help="自动结束时间距下一行的间隙")
     ap.add_argument("--last-dur", type=float, default=5.0, help="末行无结束时间时的时长")
+    ap.add_argument("--partial", action="store_true",
+                    help="允许部分歌词行没有时间(音频里未唱到的行)")
     args = ap.parse_args()
 
     if not args.lyrics.is_file():
@@ -109,50 +113,58 @@ def main():
         die(f"时间轴文件不存在,已生成待填模板: {args.times}\n"
             "        填好每行开始时间后重跑(对轴参照 inst/vocals_ref_*.wav)")
 
-    starts, ends = {}, {}
+    entries = []  # (start, end|None, 行号, 是否重复)
+    seen_primary = set()
     # utf-8-sig:Windows 记事本/Excel 导出的 BOM 不该让文件解析失败
     for i, raw in enumerate(args.times.read_text(encoding="utf-8-sig").splitlines(), 1):
         raw = raw.strip()
         if not raw or raw.startswith("#"):
             continue
         cols = raw.split("\t")
+        n_str = cols[0].strip()
+        repeat = n_str.endswith("r")
         try:
-            n = int(cols[0])
+            n = int(n_str[:-1] if repeat else n_str)
         except ValueError:
             die(f"{args.times}:{i} 行号解析失败: {raw!r}")
-        if n in starts:
-            die(f"{args.times}:{i} 行号 {n} 重复出现(复制行后忘了改行号?)")
+        if not repeat:
+            if n in seen_primary:
+                die(f"{args.times}:{i} 行号 {n} 重复出现(重复演唱段用 {n}r 标记)")
+            seen_primary.add(n)
+        if n not in lyrics:
+            die(f"{args.times}:{i} 歌词里没有第 {n} 行(检查是否笔误)")
         start_str = cols[1].strip() if len(cols) > 1 else ""
         if not start_str:
-            die(f"{args.times}:{i} 行 {n} 的开始时间还没填")
+            die(f"{args.times}:{i} 行 {n_str} 的开始时间还没填")
         try:
-            starts[n] = parse_time(start_str) + args.shift
+            start = parse_time(start_str) + args.shift
         except ValueError:
-            die(f"{args.times}:{i} 行 {n} 开始时间格式不对: {start_str!r}"
+            die(f"{args.times}:{i} 行 {n_str} 开始时间格式不对: {start_str!r}"
                 "(用秒 85.3 或 分:秒 1:25.3)")
+        end = None
         end_str = cols[2].strip() if len(cols) > 2 else ""
         if end_str:
             try:
-                ends[n] = parse_time(end_str) + args.shift
+                end = parse_time(end_str) + args.shift
             except ValueError:
-                die(f"{args.times}:{i} 行 {n} 结束时间格式不对: {end_str!r}")
+                die(f"{args.times}:{i} 行 {n_str} 结束时间格式不对: {end_str!r}")
+        entries.append((start, end, n, repeat))
 
-    missing = sorted(set(lyrics) - set(starts))
+    missing = sorted(set(lyrics) - seen_primary)
     if missing:
-        die(f"这些行还没有时间: {missing}")
-    unknown = sorted(set(starts) - set(lyrics))
-    if unknown:
-        die(f"时间轴里有歌词中不存在的行号: {unknown}(检查是否笔误)")
-    order = sorted(starts)
-    for a, b in zip(order, order[1:]):
-        if starts[b] <= starts[a]:
-            die(f"行 {b} 开始时间 ({starts[b]:.2f}) 不晚于行 {a} ({starts[a]:.2f}),检查时间轴")
+        if not args.partial:
+            die(f"这些行还没有时间: {missing}(音频里确实没唱的行,加 --partial)")
+        print(f"[subs] 注意: {len(missing)} 行不在时间轴上(音频未唱): {missing}")
+    entries.sort(key=lambda e: e[0])
+    for a, b in zip(entries, entries[1:]):
+        if b[0] <= a[0]:
+            die(f"行 {b[2]} 开始时间 ({b[0]:.2f}) 不晚于前一条 ({a[0]:.2f}),检查时间轴")
 
     events = []
-    for idx, n in enumerate(order):
-        start = starts[n]
-        end = ends.get(n, starts[order[idx + 1]] - args.gap if idx + 1 < len(order)
-                       else start + args.last_dur)
+    for idx, (start, end, n, _rep) in enumerate(entries):
+        if end is None:
+            end = (entries[idx + 1][0] - args.gap if idx + 1 < len(entries)
+                   else start + args.last_dur)
         if end <= start:
             die(f"行 {n} 结束 ({end:.2f}) 不晚于开始 ({start:.2f})")
         jp, cn = (sanitize(t) for t in lyrics[n])
@@ -161,7 +173,7 @@ def main():
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(ASS_HEADER + "\n".join(events) + "\n", encoding="utf-8-sig")
-    print(f"[subs] 完成: {len(order)} 行 → {args.out}")
+    print(f"[subs] 完成: {len(entries)} 条 → {args.out}")
 
 
 if __name__ == "__main__":

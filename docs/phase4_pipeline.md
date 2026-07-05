@@ -42,15 +42,43 @@ python3 scripts/make_subs.py        # → output/subs.ass
 
 时间格式:秒(`85.3`)或 分:秒(`1:25.3`);结束时间可全留空(自动接到下一行)。
 整体不齐时用 `--shift`,不要逐行改。
+行号带 `r` 后缀(`7r`)= 该行歌词重复演唱;音频没唱到的行可缺席,但要加 `--partial`。
+
+时间轴初稿可以自动生成(ASR 词级对齐,需 GPU;发布前仍要抽查):
+
+```bash
+conda run -n phase4 python scripts/auto_line_times.py --dry-run   # 先看对齐表
+conda run -n phase4 python scripts/auto_line_times.py             # 写 line_times.tsv
+```
+
+当前 `refs/line_times.tsv`(2026-07-05)为人工整理版:ASR + RMS 分段互证,
+按音频实际 20 句结构(见 docs/phase0_notes.md 附录),勿盲目重跑覆盖。
 
 ## 4. 出片
+
+v1(静态单图):
 
 ```bash
 python3 scripts/make_release.py --cover refs/cover.png
 # → output/release.mp4(1080p,静态封面,字幕烧录,时长按音频精确截断)
 ```
 
-封面图需你准备(任意分辨率,自动加黑边到 16:9)。
+v2(封面开场 + 内容图背景 + 双语字幕,2026-07-05 起为主路线):
+
+```bash
+python3 scripts/make_release_v2.py \
+    --audio output/preview_mix.wav --out output/preview_v2.mp4 --no-wave
+# 默认封面 refs/Azuma_Backgroud.png,内容图 refs/Azuma_Content.png,
+# 字幕 output/subs.ass;封面显示到首句前 2s 淡出 1.5s 切内容图;
+# 封面同时内嵌为 mp4 缩略图(B 站投稿封面仍需单独上传原图)。
+# 声波动画:用户定案不要(2026-07-05),固定加 --no-wave;
+# 相关参数(--wave-height/--wave-y)保留备用。
+```
+
+坑:PyCharm Remote Dev 会把 `FONTCONFIG_PATH` 指到只含西文字体的私有目录,
+libass 找不到 Noto CJK → 字幕豆腐块。make_release_v2.py 已自动剔除该变量;
+手跑 ffmpeg 烧字幕时记得 `env -u FONTCONFIG_PATH`。CJK 字体在
+`~/.local/share/fonts/NotoSansCJKjp-*.otf`(CN 样式也用 JP 字体,含简体字形)。
 
 ## 发布前红线(CLAUDE.md,不可协商)
 

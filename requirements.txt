@@ -15,3 +15,10 @@ pyloudnorm
 soundfile
 numpy
 resampy
+
+# 字幕自动对轴(scripts/auto_line_times.py)。
+# 注意:本 env 的 torch 是 CUDA13,而 ctranslate2 要 CUDA12 的 cublas/cudnn;
+# GPU 跑法:LD_LIBRARY_PATH 指向 sovits env 的 nvidia/{cublas,cudnn}/lib,
+# 或 pip install nvidia-cublas-cu12 nvidia-cudnn-cu12;缺库时脚本自动降级 CPU。
+faster-whisper
+pykakasi
