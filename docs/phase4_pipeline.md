@@ -66,13 +66,21 @@ python3 scripts/make_release.py --cover refs/cover.png
 v2(封面开场 + 内容图背景 + 双语字幕,2026-07-05 起为主路线):
 
 ```bash
+# 底部字幕版(主线):
 python3 scripts/make_release_v2.py \
-    --audio output/preview_mix.wav --out output/preview_v2.mp4 --no-wave
-# 默认封面 refs/Azuma_Backgroud.png,内容图 refs/Azuma_Content.png,
-# 字幕 output/subs.ass;封面显示到首句前 2s 淡出 1.5s 切内容图;
-# 封面同时内嵌为 mp4 缩略图(B 站投稿封面仍需单独上传原图)。
-# 声波动画:用户定案不要(2026-07-05),固定加 --no-wave;
-# 相关参数(--wave-height/--wave-y)保留备用。
+    --audio output/preview_mix.wav --out output/preview_v2.mp4 --no-wave \
+    --cover refs/Azuma_Cover_v2.png --content refs/Azuma_Content_v2.png
+# 黑板歌词版(变体,歌词写在 Content_v2 的空黑板里):
+python3 scripts/make_subs.py --partial --board       # → output/subs_board.ass
+python3 scripts/make_release_v2.py \
+    --audio output/preview_mix.wav --out output/preview_v2_board.mp4 --no-wave \
+    --cover refs/Azuma_Cover_v2.png --content refs/Azuma_Content_v2.png \
+    --subs output/subs_board.ass
+# 图源(2026-07-05 用户新交付,ChatGPT 生成):Azuma_Cover_v2 = 封面(念张师/
+# AI翻唱版/致记忆中的老师),Azuma_Content_v2 = 空黑板夜景;旧 Azuma_Backgroud/
+# Azuma_Content 已弃用并移出 refs/(需要时从 git 历史 59563f2 找回)。
+# 封面显示到首句前 2s 淡出 1.5s;封面兼作 mp4 缩略图。
+# 声波动画:用户定案不要(2026-07-05),固定加 --no-wave(参数保留备用)。
 ```
 
 坑:PyCharm Remote Dev 会把 `FONTCONFIG_PATH` 指到只含西文字体的私有目录,

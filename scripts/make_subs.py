@@ -38,6 +38,28 @@ Style: CN,Noto Sans CJK JP,44,&H00D8D8D8,&H00FFFFFF,&H00202020,&H80000000,0,0,0,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
+# --board:歌词写在 refs/Azuma_Content_v2.png 的空黑板上(粉笔感:无描边+轻模糊)。
+# 坐标按该图内框实测(1672x941 → 1920x1080 等比放大 1.1483):
+# 内饰线框 x 155-705 / y 110-545 → 缩放后中心 x≈494,JP y≈340 / CN y≈432。
+BOARD_HEADER = """[Script Info]
+Title: 念张师 日语版(黑板排版)
+ScriptType: v4.00+
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+PlayResX: 1920
+PlayResY: 1080
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: JP,Noto Sans CJK JP,38,&H00F2F6FF,&H00FFFFFF,&H00202020,&H00000000,0,0,0,0,100,100,1,0,1,0,0,5,0,0,0,1
+Style: CN,Noto Sans CJK JP,28,&H00C8D2E6,&H00FFFFFF,&H00202020,&H00000000,0,0,0,0,100,100,1,0,1,0,0,5,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+BOARD_POS = {"JP": (494, 340), "CN": (494, 432)}
+BOARD_FX = r"\blur0.8"
+
 
 def die(msg):
     print(f"[subs] 错误: {msg}", file=sys.stderr)
@@ -102,7 +124,12 @@ def main():
     ap.add_argument("--last-dur", type=float, default=5.0, help="末行无结束时间时的时长")
     ap.add_argument("--partial", action="store_true",
                     help="允许部分歌词行没有时间(音频里未唱到的行)")
+    ap.add_argument("--board", action="store_true",
+                    help="黑板排版:歌词定位到 Azuma_Content_v2 空黑板内,"
+                         "默认输出 subs_board.ass")
     args = ap.parse_args()
+    if args.board and args.out == PROJECT / "output" / "subs.ass":
+        args.out = PROJECT / "output" / "subs_board.ass"
 
     if not args.lyrics.is_file():
         die(f"歌词不存在: {args.lyrics}")
@@ -168,11 +195,17 @@ def main():
         if end <= start:
             die(f"行 {n} 结束 ({end:.2f}) 不晚于开始 ({start:.2f})")
         jp, cn = (sanitize(t) for t in lyrics[n])
-        events.append(f"Dialogue: 0,{fmt_ass(start)},{fmt_ass(end)},JP,,0,0,0,,{jp}")
-        events.append(f"Dialogue: 0,{fmt_ass(start)},{fmt_ass(end)},CN,,0,0,0,,{cn}")
+        for style, text in (("JP", jp), ("CN", cn)):
+            fx = ""
+            if args.board:
+                x, y = BOARD_POS[style]
+                fx = f"{{\\pos({x},{y}){BOARD_FX}}}"
+            events.append(f"Dialogue: 0,{fmt_ass(start)},{fmt_ass(end)},"
+                          f"{style},,0,0,0,,{fx}{text}")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(ASS_HEADER + "\n".join(events) + "\n", encoding="utf-8-sig")
+    header = BOARD_HEADER if args.board else ASS_HEADER
+    args.out.write_text(header + "\n".join(events) + "\n", encoding="utf-8-sig")
     print(f"[subs] 完成: {len(entries)} 条 → {args.out}")
 
 
