@@ -1,7 +1,8 @@
 # SVC-Cover-Pipeline
 
-<img src="assets/borris.svg" width="86" alt="Borris, the Claude Code mascot, squinting happily"><br>
-<sub>Special thanks to <a href="https://claude.com/claude-code">Claude Fable</a></sub>
+<a href="https://claude.com/claude-code">
+  <img src="assets/thanks_banner.svg" width="580"
+       alt="Special thanks to Claude Fable for making this project possible"></a>
 
 A command-line pipeline for AI singing covers: Synthesizer V source vocals →
 [so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
