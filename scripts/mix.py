@@ -9,8 +9,10 @@
 
 依赖:pedalboard, pyloudnorm, soundfile, numpy(,resampy 仅采样率不一致时)。
 
+路径:默认相对 --project 工程目录(见 project_paths.py)。
+
 示例:
-  python scripts/mix.py --vocal vocal/svc_out/selected.wav --inst inst/inst_from_anon_version.wav
+  python scripts/mix.py --inst <project>/inst/伴奏.wav
   python scripts/mix.py ... --vocal-shift 0.35     # 人声整体延后 0.35s 对拍
   python scripts/mix.py ... --reverb-wet 0.22 --vocal-offset -1.0   # A/B 微调
 """
@@ -24,7 +26,7 @@ import pyloudnorm
 import soundfile as sf
 from pedalboard import Compressor, HighpassFilter, Pedalboard, Reverb
 
-PROJECT = Path(__file__).resolve().parent.parent
+from project_paths import add_project_arg, resolve_project
 
 
 def die(msg):
@@ -55,10 +57,12 @@ def lufs(meter, x):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--vocal", type=Path,
-                    default=PROJECT / "vocal" / "svc_out" / "selected.wav")
+    add_project_arg(ap)
+    ap.add_argument("--vocal", type=Path, default=None,
+                    help="默认 <project>/vocal/svc_out/selected.wav")
     ap.add_argument("--inst", type=Path, required=True, help="伴奏 wav")
-    ap.add_argument("--out", type=Path, default=PROJECT / "output" / "final_mix.wav")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="默认 <project>/output/final_mix.wav")
     ap.add_argument("--vocal-shift", type=float, default=0.0,
                     help="人声整体平移秒数,正=延后负=提前(对拍用)")
     ap.add_argument("--vocal-offset", type=float, default=-1.5,
@@ -74,6 +78,9 @@ def main():
     ap.add_argument("--save-stems", action="store_true",
                     help="额外导出处理后的人声 stem,便于排查")
     args = ap.parse_args()
+    proj = resolve_project(args)
+    args.vocal = args.vocal or proj / "vocal" / "svc_out" / "selected.wav"
+    args.out = args.out or proj / "output" / "final_mix.wav"
 
     for p in (args.vocal, args.inst):
         if not p.expanduser().is_file():
@@ -165,7 +172,8 @@ def main():
         stem_path = args.out.with_name(args.out.stem + "_vocal_stem.wav")
         sf.write(stem_path, pad(vocal), sr, subtype="PCM_24")
         print(f"[mix] 人声 stem → {stem_path}")
-    print("[mix] 下一步:与 refs/anon_version.mp3 做 A/B(人声电平/混响量/整体响度)")
+    print(f"[mix] 下一步:与 {proj.name}/refs/ 下的参照版做 A/B"
+          "(人声电平/混响量/整体响度)")
 
 
 if __name__ == "__main__":

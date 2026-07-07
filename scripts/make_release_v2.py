@@ -11,8 +11,8 @@
 
 示例:
   python3 scripts/make_release_v2.py \
-      --audio output/preview_mix.wav --out output/preview_v2.mp4 \
-      --cover refs/Azuma_Backgroud.png --content refs/Azuma_Content.png
+      --cover nianzhangshi/refs/Azuma_Cover_v2.png \
+      --content nianzhangshi/refs/Azuma_Content_v2.png
 """
 
 import argparse
@@ -22,7 +22,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
+from project_paths import add_project_arg, resolve_project
 
 
 def die(msg):
@@ -67,14 +67,17 @@ def first_sub_start(subs: Path) -> float:
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--audio", type=Path, default=PROJECT / "output" / "final_mix.wav")
-    ap.add_argument("--cover", type=Path, default=PROJECT / "refs" / "Azuma_Backgroud.png",
+    add_project_arg(ap)
+    ap.add_argument("--audio", type=Path, default=None,
+                    help="默认 <project>/output/final_mix.wav")
+    ap.add_argument("--cover", type=Path, required=True,
                     help="开场封面图(含标题字,兼作 mp4 缩略图)")
-    ap.add_argument("--content", type=Path, default=PROJECT / "refs" / "Azuma_Content.png",
-                    help="正片背景图")
-    ap.add_argument("--subs", type=Path, default=PROJECT / "output" / "subs.ass")
+    ap.add_argument("--content", type=Path, required=True, help="正片背景图")
+    ap.add_argument("--subs", type=Path, default=None,
+                    help="默认 <project>/output/subs.ass")
     ap.add_argument("--no-subs", action="store_true")
-    ap.add_argument("--out", type=Path, default=PROJECT / "output" / "release_v2.mp4")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="默认 <project>/output/release_v2.mp4")
     ap.add_argument("--intro-end", type=float, default=None,
                     help="封面开始淡出的秒数;默认=首句字幕前 2s(夹在 4~20s)")
     ap.add_argument("--fade", type=float, default=1.5, help="封面→内容淡出时长")
@@ -85,6 +88,10 @@ def main():
     ap.add_argument("--crf", type=int, default=20)
     ap.add_argument("--fps", type=int, default=30)
     args = ap.parse_args()
+    proj = resolve_project(args)
+    args.audio = args.audio or proj / "output" / "final_mix.wav"
+    args.subs = args.subs or proj / "output" / "subs.ass"
+    args.out = args.out or proj / "output" / "release_v2.mp4"
 
     for tool in ("ffmpeg", "ffprobe"):
         if shutil.which(tool) is None:

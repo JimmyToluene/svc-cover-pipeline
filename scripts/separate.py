@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Phase 4 — 伴奏分离兜底(audio-separator 封装)。
 
-伴奏获取优先级(CLAUDE.md):(1) 官方伴奏 >(2) 从爱音版分离(本脚本默认)
->(3) 从中文原版分离。爱音版人声是 SVC 干声+混响,分离难度低于真人演唱。
+伴奏获取优先级(CLAUDE.md):(1) 官方伴奏 >(2) 从参照翻唱版分离(本脚本默认;
+若其人声是 SVC 干声+混响,分离难度低于真人演唱)>(3) 从原版音频分离。
 
 默认用 BS-Roformer(当前 SDR 最高的通用分离模型),可选对伴奏再跑一遍
 DeEcho-DeReverb 去除人声混响残留(--dereverb,伴奏里听得到"人声尾巴"时用)。
@@ -10,8 +10,10 @@ DeEcho-DeReverb 去除人声混响残留(--dereverb,伴奏里听得到"人声尾
 依赖:audio-separator[gpu](建议装在独立 phase4 env,librosa 版本与 sovits env 冲突)。
 模型权重首次运行自动下载到 --model-dir。
 
+默认输入:<project>/refs/ 下唯一的音频文件(mp3/wav/flac/m4a),多个时用 --input 指定。
+
 示例:
-  python scripts/separate.py                      # 爱音版 → inst/
+  python scripts/separate.py                      # 参照版 → <project>/inst/
   python scripts/separate.py --dereverb           # 伴奏残留人声混响时
   python scripts/separate.py --input 中文原版.mp3  # 兜底的兜底
 """
@@ -22,7 +24,7 @@ import shutil
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
+from project_paths import add_project_arg, resolve_project
 
 SEP_MODEL = "model_bs_roformer_ep_317_sdr_12.9755.ckpt"
 DEREVERB_MODEL = "UVR-DeEcho-DeReverb.pth"
@@ -48,11 +50,25 @@ def pick(paths, *keywords, strip_prefix=""):
     return None
 
 
+def default_input(proj: Path) -> Path:
+    refs = proj / "refs"
+    auds = sorted(p for p in (refs.iterdir() if refs.is_dir() else [])
+                  if p.suffix.lower() in (".mp3", ".wav", ".flac", ".m4a"))
+    if len(auds) == 1:
+        return auds[0]
+    if not auds:
+        die(f"{refs} 下没有音频文件,用 --input 指定分离输入")
+    die(f"{refs} 下有多个音频 {[p.name for p in auds]},用 --input 指定")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--input", type=Path, default=PROJECT / "refs" / "anon_version.mp3")
-    ap.add_argument("--outdir", type=Path, default=PROJECT / "inst")
+    add_project_arg(ap)
+    ap.add_argument("--input", type=Path, default=None,
+                    help="默认 <project>/refs/ 下唯一的音频文件")
+    ap.add_argument("--outdir", type=Path, default=None,
+                    help="默认 <project>/inst")
     ap.add_argument("--model", default=SEP_MODEL)
     ap.add_argument("--dereverb", action="store_true",
                     help="对分离出的伴奏再跑 DeEcho-DeReverb,去人声混响残留")
@@ -61,8 +77,10 @@ def main():
                     help="模型权重缓存目录(首次自动下载)")
     ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
     args = ap.parse_args()
+    proj = resolve_project(args)
+    args.outdir = args.outdir or proj / "inst"
 
-    args.input = args.input.expanduser()
+    args.input = (args.input or default_input(proj)).expanduser()
     if not args.input.is_file():
         die(f"输入不存在: {args.input}")
     if args.device == "cpu":

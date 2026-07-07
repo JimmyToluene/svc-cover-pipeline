@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Phase 4 — 从 lyrics/final.md 生成双语 .ass 字幕(日语大字 + 中文小字)。
+"""Phase 4 — 从 <project>/lyrics/final.md 生成双语 .ass 字幕(日语大字 + 中文小字)。
 
-时间轴来自 refs/line_times.tsv(行号<TAB>开始<TAB>结束[<TAB>备注]):
+时间轴来自 <project>/refs/line_times.tsv(行号<TAB>开始<TAB>结束[<TAB>备注]):
 - 首次运行若无该文件,自动生成待填模板后退出;
 - 时间写秒(85.3)或 分:秒(1:25.3)都行;结束留空 = 下一行开始前 0.1s,
   末行留空 = 开始 + --last-dur;
@@ -10,7 +10,7 @@
 - 对轴参照:inst/vocals_ref_*.wav(分离出的爱音版人声)或 SynthV 工程小节时间。
 
 示例:
-  python scripts/make_subs.py                 # 生成 output/subs.ass
+  python scripts/make_subs.py                 # 生成 <project>/output/subs.ass
   python scripts/make_subs.py --shift 0.35    # 整体延后 0.35s(与 mix 的 vocal-shift 联动)
 """
 
@@ -19,10 +19,10 @@ import re
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
+from project_paths import add_project_arg, resolve_project
 
 ASS_HEADER = """[Script Info]
-Title: 念张师 日语版
+Title: {title}
 ScriptType: v4.00+
 WrapStyle: 0
 ScaledBorderAndShadow: yes
@@ -38,11 +38,12 @@ Style: CN,Noto Sans CJK JP,44,&H00D8D8D8,&H00FFFFFF,&H00202020,&H80000000,0,0,0,
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
-# --board:歌词写在 refs/Azuma_Content_v2.png 的空黑板上(粉笔感:无描边+轻模糊)。
-# 坐标按该图内框实测(1672x941 → 1920x1080 等比放大 1.1483):
+# --board:歌词定位到背景图的固定留白区(粉笔感:无描边+轻模糊),坐标用
+# --board-jp/--board-cn 按图实测调。默认值按 nianzhangshi 工程的
+# Azuma_Content_v2.png 内框实测(1672x941 → 1920x1080 等比放大 1.1483):
 # 内饰线框 x 155-705 / y 110-545 → 缩放后中心 x≈494,JP y≈340 / CN y≈432。
 BOARD_HEADER = """[Script Info]
-Title: 念张师 日语版(黑板排版)
+Title: {title}(定位排版)
 ScriptType: v4.00+
 WrapStyle: 2
 ScaledBorderAndShadow: yes
@@ -57,7 +58,6 @@ Style: CN,Noto Sans CJK JP,28,&H00C8D2E6,&H00FFFFFF,&H00202020,&H00000000,0,0,0,
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
-BOARD_POS = {"JP": (494, 340), "CN": (494, 432)}
 BOARD_FX = r"\blur0.8"
 
 
@@ -116,20 +116,34 @@ def write_template(times_path: Path, lyrics: dict):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--lyrics", type=Path, default=PROJECT / "lyrics" / "final.md")
-    ap.add_argument("--times", type=Path, default=PROJECT / "refs" / "line_times.tsv")
-    ap.add_argument("--out", type=Path, default=PROJECT / "output" / "subs.ass")
+    add_project_arg(ap)
+    ap.add_argument("--lyrics", type=Path, default=None,
+                    help="默认 <project>/lyrics/final.md")
+    ap.add_argument("--times", type=Path, default=None,
+                    help="默认 <project>/refs/line_times.tsv")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="默认 <project>/output/subs.ass(--board 时 subs_board.ass)")
+    ap.add_argument("--title", default=None,
+                    help="ASS Script Info 标题,默认取工程目录名")
     ap.add_argument("--shift", type=float, default=0.0, help="整体平移秒数,正=延后")
     ap.add_argument("--gap", type=float, default=0.1, help="自动结束时间距下一行的间隙")
     ap.add_argument("--last-dur", type=float, default=5.0, help="末行无结束时间时的时长")
     ap.add_argument("--partial", action="store_true",
                     help="允许部分歌词行没有时间(音频里未唱到的行)")
     ap.add_argument("--board", action="store_true",
-                    help="黑板排版:歌词定位到 Azuma_Content_v2 空黑板内,"
-                         "默认输出 subs_board.ass")
+                    help="定位排版:歌词 \\pos 到背景图固定留白区(坐标见 --board-jp/cn)")
+    ap.add_argument("--board-jp", type=int, nargs=2, default=(494, 340),
+                    metavar=("X", "Y"), help="--board 时日语行中心坐标(1920x1080 系)")
+    ap.add_argument("--board-cn", type=int, nargs=2, default=(494, 432),
+                    metavar=("X", "Y"), help="--board 时中文行中心坐标")
     args = ap.parse_args()
-    if args.board and args.out == PROJECT / "output" / "subs.ass":
-        args.out = PROJECT / "output" / "subs_board.ass"
+    proj = resolve_project(args)
+    args.lyrics = args.lyrics or proj / "lyrics" / "final.md"
+    args.times = args.times or proj / "refs" / "line_times.tsv"
+    if args.out is None:
+        args.out = proj / "output" / ("subs_board.ass" if args.board else "subs.ass")
+    title = args.title or proj.name
+    board_pos = {"JP": tuple(args.board_jp), "CN": tuple(args.board_cn)}
 
     if not args.lyrics.is_file():
         die(f"歌词不存在: {args.lyrics}")
@@ -198,13 +212,13 @@ def main():
         for style, text in (("JP", jp), ("CN", cn)):
             fx = ""
             if args.board:
-                x, y = BOARD_POS[style]
+                x, y = board_pos[style]
                 fx = f"{{\\pos({x},{y}){BOARD_FX}}}"
             events.append(f"Dialogue: 0,{fmt_ass(start)},{fmt_ass(end)},"
                           f"{style},,0,0,0,,{fx}{text}")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    header = BOARD_HEADER if args.board else ASS_HEADER
+    header = (BOARD_HEADER if args.board else ASS_HEADER).format(title=title)
     args.out.write_text(header + "\n".join(events) + "\n", encoding="utf-8-sig")
     print(f"[subs] 完成: {len(entries)} 条 → {args.out}")
 

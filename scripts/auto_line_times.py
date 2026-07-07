@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Phase 4 — ASR 自动生成字幕时间轴(refs/line_times.tsv 初稿)。
+"""Phase 4 — ASR 自动生成字幕时间轴(<project>/refs/line_times.tsv 初稿)。
 
-原理:对分离人声(inst/vocals_ref_anon_version.wav)跑 faster-whisper 词级时间戳,
-词流假名化后与 lyrics/final.md 的 25 行做单调 DP 对齐,行首/行尾时间写入
-refs/line_times.tsv(make_subs.py 的输入格式,含结束时间,避免间奏字幕悬挂)。
+原理:对分离人声(默认 <project>/inst/ 下唯一的 vocals_ref_*.wav)跑
+faster-whisper 词级时间戳,词流假名化后与 lyrics/final.md 的歌词行做单调 DP
+对齐,行首/行尾时间写入 refs/line_times.tsv(make_subs.py 的输入格式,
+含结束时间,避免间奏字幕悬挂)。
 
 时间基:参照人声与 preview_mix/final_mix 一致(mix.py vocal-shift=0,仅尾部垫 3s),
 时间戳可直接用于成品字幕;若 mix 时用了 --vocal-shift,make_subs.py --shift 同值。
 
-ASR 对歌声转写不完美,输出是**初稿**:发布前抽查 4-6 行(第 1 行、副歌 7/21、
-间奏后的 11/17)。整体偏移用 make_subs.py --shift,不逐行改。
+ASR 对歌声转写不完美,输出是**初稿**:发布前抽查 4-6 行(首行、副歌、
+间奏后的行最易错)。整体偏移用 make_subs.py --shift,不逐行改。
 
 用法(phase4 env,首跑会下载 whisper 模型):
   conda run -n phase4 python scripts/auto_line_times.py             # 写 tsv
@@ -22,14 +23,24 @@ import re
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from make_subs import parse_lyrics  # noqa: E402
+from project_paths import add_project_arg, resolve_project  # noqa: E402
 
 
 def die(msg):
     print(f"[align] 错误: {msg}", file=sys.stderr)
     sys.exit(1)
+
+
+def default_vocals(proj: Path) -> Path:
+    cands = sorted((proj / "inst").glob("vocals_ref_*.wav"))
+    if len(cands) == 1:
+        return cands[0]
+    if not cands:
+        die(f"{proj / 'inst'} 下没有 vocals_ref_*.wav(先跑 separate.py),"
+            "或用 --vocals 指定")
+    die(f"{proj / 'inst'} 下有多个参照人声 {[p.name for p in cands]},用 --vocals 指定")
 
 
 KANA_RE = re.compile(r"[ぁ-ゖー]")
@@ -133,10 +144,13 @@ def align(lines_kana, words_kana, max_span=40, skip_penalty=0.5):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--vocals", type=Path,
-                    default=PROJECT / "inst" / "vocals_ref_anon_version.wav")
-    ap.add_argument("--lyrics", type=Path, default=PROJECT / "lyrics" / "final.md")
-    ap.add_argument("--out", type=Path, default=PROJECT / "refs" / "line_times.tsv")
+    add_project_arg(ap)
+    ap.add_argument("--vocals", type=Path, default=None,
+                    help="对齐用人声,默认 <project>/inst/ 下唯一的 vocals_ref_*.wav")
+    ap.add_argument("--lyrics", type=Path, default=None,
+                    help="默认 <project>/lyrics/final.md")
+    ap.add_argument("--out", type=Path, default=None,
+                    help="默认 <project>/refs/line_times.tsv")
     ap.add_argument("--model", default="large-v3-turbo")
     ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
     ap.add_argument("--max-span", type=int, default=40, help="一行最多吃多少个 ASR 词")
@@ -144,6 +158,10 @@ def main():
     ap.add_argument("--tail", type=float, default=0.35, help="行尾字幕延留秒数")
     ap.add_argument("--dry-run", action="store_true", help="只打印对齐表,不写文件")
     args = ap.parse_args()
+    proj = resolve_project(args)
+    args.vocals = args.vocals or default_vocals(proj)
+    args.lyrics = args.lyrics or proj / "lyrics" / "final.md"
+    args.out = args.out or proj / "refs" / "line_times.tsv"
 
     for p in (args.vocals, args.lyrics):
         if not p.is_file():
@@ -196,7 +214,7 @@ def main():
         return
     hdr = ("# 行号\t开始\t结束\t参考(勿改动列顺序;结束可留空)\n"
            "# 本文件由 scripts/auto_line_times.py(ASR)自动生成,是初稿;\n"
-           "# 发布前抽查第 1/7/11/17/21 行,整体偏移用 make_subs.py --shift 修\n")
+           "# 发布前抽查首行/副歌/间奏后各行,整体偏移用 make_subs.py --shift 修\n")
     body = "".join(f"{n}\t{s:.2f}\t{e:.2f}\t{lyrics[n][0]}\n" for n, s, e in out_rows)
     args.out.write_text(hdr + body, encoding="utf-8")
     print(f"[align] 写入 {args.out}({len(out_rows)} 行)")

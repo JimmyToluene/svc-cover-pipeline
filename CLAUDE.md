@@ -45,29 +45,40 @@
 每个 Phase 结束时明确列出"需要你做的事",然后停下等输入。不要在缺少用户输入时
 用假设数据继续推进。
 
-## 目录结构
+## 目录结构(通用管线 + 工程目录)
+
+repo 根只放**通用管线**:`scripts/`(所有脚本歌曲无关)、`requirements.txt`、
+本文件。每首歌一个**工程目录**,当前工程是 `nianzhangshi/`。所有脚本接受
+`--project <目录>`(默认 `$AIMAD_PROJECT`,否则 `nianzhangshi`),脚本内
+一切默认路径都相对工程目录解析。新开工程:`python scripts/new_project.py <名>`。
+下文提到的相对路径(`refs/...`、`lyrics/...` 等)一律指工程目录内。
 
 ```
-nenzhangshi-jp/
+ai_mad/
 ├── CLAUDE.md
-├── refs/                  # 参照输入
-│   ├── anon_version.mp3   # 爱音版音频(用户提供,时值/混音/伴奏参照)
-│   └── mora_budget.tsv    # 格式: 行号<TAB>mora数<TAB>v1对应句
-├── lyrics/
-│   ├── drafts/
-│   │   ├── v1.md          # 爱音版原文照录(不动它,作为 diff 基线)
-│   │   └── v2.md, v3.md...
-│   └── final.md
-├── vocal/
-│   ├── synthv_source.wav  # 用户从 SynthV 导出的干声
-│   └── svc_out/           # 各参数组合的转换结果,文件名含参数
-├── models/
-│   └── higashi_yukiren/   # so-vits-svc 4.1 模型 (G_*.pth + config.json
-│                          #  + 可选 kmeans/特征检索 + 可选 diffusion)
-├── inst/                  # 伴奏(用户提供或 UVR 分离)
-├── scripts/
-├── output/
-└── docs/
+├── requirements.txt
+├── scripts/               # 通用管线(歌曲无关,靠 --project 参数指向工程)
+│   ├── project_paths.py   # --project 解析(共享)
+│   ├── new_project.py     # 新工程脚手架
+│   └── separate/svc_infer/mix/auto_line_times/make_subs/make_release*.py
+└── nianzhangshi/          # 《念张师》工程目录(每首歌复制这一套结构)
+    ├── refs/                  # 参照输入
+    │   ├── anon_version.mp3   # 爱音版音频(用户提供,时值/混音/伴奏参照)
+    │   └── mora_budget.tsv    # 格式: 行号<TAB>mora数<TAB>v1对应句
+    ├── lyrics/
+    │   ├── drafts/
+    │   │   ├── v1.md          # 爱音版原文照录(不动它,作为 diff 基线)
+    │   │   └── v2.md, v3.md...
+    │   └── final.md
+    ├── vocal/
+    │   ├── synthv_source.wav  # 用户从 SynthV 导出的干声
+    │   └── svc_out/           # 各参数组合的转换结果,文件名含参数
+    ├── models/
+    │   └── higashi_yukiren/   # so-vits-svc 4.1 模型 (G_*.pth + config.json
+    │                          #  + 可选 kmeans/特征检索 + 可选 diffusion)
+    ├── inst/                  # 伴奏(用户提供或 UVR 分离)
+    ├── output/
+    └── docs/
 ```
 
 ## 工作阶段

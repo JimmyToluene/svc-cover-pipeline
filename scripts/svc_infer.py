@@ -2,16 +2,16 @@
 """Phase 3 — so-vits-svc 4.1 参数网格跑批。
 
 封装 so-vits-svc 4.1-Stable 的 inference_main.py:
-自动检测 models/higashi_yukiren/ 里的模型文件,按 transpose × cluster_ratio ×
-f0_predictor × (浅扩散) 网格逐个推理,结果收集到 vocal/svc_out/
-(文件名编码参数),并生成/追加 docs/svc_grid.md 盲听对比表。
+自动检测 <project>/models/ 里的模型文件(唯一含 config.json 的子目录,或直接
+--model-dir 指定),按 transpose × cluster_ratio × f0_predictor × (浅扩散)
+网格逐个推理,结果收集到 <project>/vocal/svc_out/(文件名编码参数),
+并生成/追加 <project>/docs/svc_grid.md 盲听对比表。
 
 依赖:仅标准库 + 系统 ffmpeg(输入下混单声道用)。
 so-vits-svc 自身的依赖属于其 checkout 的环境,用 --python 指定该环境的解释器。
 
 示例:
-  python scripts/svc_infer.py --svc-repo ~/so-vits-svc \
-      --input vocal/synthv_source_a.wav -t 0 12 --dry-run
+  python scripts/svc_infer.py --svc-repo ~/so-vits-svc -t 0 12 --dry-run
 """
 
 import argparse
@@ -26,15 +26,27 @@ import sys
 import time
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
-MODEL_DIR_DEFAULT = PROJECT / "models" / "higashi_yukiren"
-OUT_DIR = PROJECT / "vocal" / "svc_out"
-GRID_MD = PROJECT / "docs" / "svc_grid.md"
+from project_paths import add_project_arg, resolve_project
 
 
 def die(msg):
     print(f"[svc_infer] 错误: {msg}", file=sys.stderr)
     sys.exit(1)
+
+
+def default_model_dir(proj: Path) -> Path:
+    """<project>/models 本身是模型目录就用它;否则要求恰好一个含 config.json 的子目录。"""
+    root = proj / "models"
+    if (root / "config.json").is_file():
+        return root
+    cands = (sorted(d for d in root.iterdir()
+                    if d.is_dir() and (d / "config.json").is_file())
+             if root.is_dir() else [])
+    if len(cands) == 1:
+        return cands[0]
+    if not cands:
+        die(f"{root} 下没找到模型目录(需含 config.json),用 --model-dir 指定")
+    die(f"{root} 下有多个模型目录 {[d.name for d in cands]},用 --model-dir 指定")
 
 
 def detect_model(model_dir: Path):
@@ -132,12 +144,13 @@ def out_name(stem, f0p, t, cr, use_fr, shd, args):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
+    add_project_arg(ap)
     ap.add_argument("--svc-repo", required=True, type=Path,
                     help="so-vits-svc 4.1-Stable checkout 路径")
-    ap.add_argument("--input", type=Path,
-                    default=PROJECT / "vocal" / "synthv_source.wav",
-                    help="SynthV 导出的干声 wav")
-    ap.add_argument("--model-dir", type=Path, default=MODEL_DIR_DEFAULT)
+    ap.add_argument("--input", type=Path, default=None,
+                    help="SynthV 导出的干声 wav,默认 <project>/vocal/synthv_source.wav")
+    ap.add_argument("--model-dir", type=Path, default=None,
+                    help="默认自动检测 <project>/models/ 下唯一的模型目录")
     ap.add_argument("--speaker", default=None,
                     help="config.json spk 表中的说话人名,默认取第一个")
     ap.add_argument("-t", "--transpose", type=int, nargs="+", default=[0],
@@ -160,9 +173,12 @@ def main():
                     help="运行 inference_main.py 用的解释器(sovits 环境)")
     ap.add_argument("--dry-run", action="store_true", help="只打印命令不执行")
     args = ap.parse_args()
+    proj = resolve_project(args)
+    out_dir = proj / "vocal" / "svc_out"
+    grid_md = proj / "docs" / "svc_grid.md"
 
     svc_repo = args.svc_repo.expanduser().resolve()
-    args.input = args.input.expanduser()
+    args.input = (args.input or proj / "vocal" / "synthv_source.wav").expanduser()
     if not (svc_repo / "inference_main.py").is_file():
         die(f"{svc_repo} 不是 so-vits-svc checkout(缺 inference_main.py)")
     if not args.input.is_file():
@@ -171,7 +187,9 @@ def main():
             and not Path(args.python).expanduser().is_file():
         die(f"--python 解释器不存在: {args.python}")
 
-    m = detect_model(args.model_dir.expanduser().resolve())
+    model_dir = (args.model_dir.expanduser().resolve() if args.model_dir
+                 else default_model_dir(proj))
+    m = detect_model(model_dir)
     speakers, encoder, sr = read_config(m["config"])
     speaker = args.speaker or speakers[0]
     if speaker not in speakers:
@@ -224,7 +242,7 @@ def main():
         clip, lg = 25, 1
         print("[svc_infer] whisper-ppg 编码器:强制 -cl 25 -lg 1", file=sys.stderr)
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(parents=True, exist_ok=True)
     results_dir = svc_repo / "results"
     rows, failures = [], 0
 
@@ -247,7 +265,7 @@ def main():
                     "-dc", str(m["diff_config"]),
                     "-ks", str(args.k_step)]
 
-        dst = OUT_DIR / out_name(stem, f0p, t, cr, use_fr, shd, args)
+        dst = out_dir / out_name(stem, f0p, t, cr, use_fr, shd, args)
         print(f"\n[svc_infer] → {dst.name}\n  " + " ".join(cmd))
         if args.dry_run:
             continue
@@ -295,7 +313,7 @@ def main():
 
     stamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     lines = []
-    if not GRID_MD.exists():
+    if not grid_md.exists():
         lines += ["# Phase 3 — so-vits-svc 参数网格盲听对比\n",
                   "备注列由用户盲听后填写;selected.wav = 最终选定版。\n"]
     lines += [f"\n## 批次 {stamp} — 输入 `{args.input.name}`,"
@@ -306,12 +324,12 @@ def main():
         cell = name.replace("|", "\\|")
         lines.append(f"| `{cell}` | {f0p} | {t:+d} | {cr} | "
                      f"{'k=' + str(args.k_step) if shd else '—'} | {status} | |")
-    with GRID_MD.open("a", encoding="utf-8") as f:
+    with grid_md.open("a", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
 
     ok = len(rows) - failures
-    print(f"\n[svc_infer] 完成: {ok}/{len(rows)} 成功 → {OUT_DIR}")
-    print(f"[svc_infer] 对比表已追加: {GRID_MD}")
+    print(f"\n[svc_infer] 完成: {ok}/{len(rows)} 成功 → {out_dir}")
+    print(f"[svc_infer] 对比表已追加: {grid_md}")
     if interrupted:
         sys.exit(130)
     if failures:

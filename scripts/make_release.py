@@ -15,7 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT = Path(__file__).resolve().parent.parent
+from project_paths import add_project_arg, resolve_project
 
 
 def die(msg):
@@ -40,16 +40,22 @@ def audio_duration(path: Path) -> float:
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--audio", type=Path, default=PROJECT / "output" / "final_mix.wav")
+    add_project_arg(ap)
+    ap.add_argument("--audio", type=Path, default=None,
+                    help="默认 <project>/output/final_mix.wav")
     ap.add_argument("--cover", type=Path, required=True, help="静态封面图(png/jpg)")
-    ap.add_argument("--subs", type=Path, default=PROJECT / "output" / "subs.ass")
+    ap.add_argument("--subs", type=Path, default=None,
+                    help="默认 <project>/output/subs.ass")
     ap.add_argument("--no-subs", action="store_true")
     ap.add_argument("--soft", action="store_true", help="软字幕 mkv(默认烧录 mp4)")
     ap.add_argument("--out", type=Path, default=None,
-                    help="默认 output/release.mp4(--soft 时 .mkv)")
+                    help="默认 <project>/output/release.mp4(--soft 时 .mkv)")
     ap.add_argument("--crf", type=int, default=20)
     ap.add_argument("--fps", type=int, default=24)
     args = ap.parse_args()
+    proj = resolve_project(args)
+    args.audio = args.audio or proj / "output" / "final_mix.wav"
+    args.subs = args.subs or proj / "output" / "subs.ass"
 
     for tool in ("ffmpeg", "ffprobe"):
         if shutil.which(tool) is None:
@@ -63,7 +69,7 @@ def main():
     if use_subs and not args.subs.is_file():
         die(f"字幕不存在: {args.subs}(先跑 make_subs.py,或加 --no-subs)")
 
-    out = args.out or (PROJECT / "output" / ("release.mkv" if args.soft else "release.mp4"))
+    out = args.out or (proj / "output" / ("release.mkv" if args.soft else "release.mp4"))
     out.parent.mkdir(parents=True, exist_ok=True)
 
     vf = ("scale=1920:1080:force_original_aspect_ratio=decrease,"
