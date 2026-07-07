@@ -23,16 +23,24 @@ complete example project taken from a real production.
 
 ## Showcase
 
-<a href="https://www.bilibili.com/video/BV14kMh6WEH9/">
-  <img src="southeast_ascetic_mountain_funk/refs/Cover.png" width="560"
-       alt="Southeast Yukiren Mountain Funk — cover art, links to the Bilibili video">
-</a>
-
-**《东南苦行山》但是冬雪莲抱起了贝斯｜东南雪莲山 Funk** — a funk cover of
-"Dongnan Shan" in Higashi Yukiren's voice, produced end-to-end with this
-pipeline ([watch on Bilibili](https://www.bilibili.com/video/BV14kMh6WEH9/),
-labeled as AI-generated content). Its project files live in
-[`southeast_ascetic_mountain_funk/`](southeast_ascetic_mountain_funk/).
+<div align="center">
+  <a href="https://www.bilibili.com/video/BV14kMh6WEH9/">
+    <img src="southeast_ascetic_mountain_funk/refs/Cover.png" width="680"
+         alt="Southeast Yukiren Mountain Funk — cover art, links to the Bilibili video">
+  </a>
+  <p>
+    <b>《东南苦行山》但是冬雪莲抱起了贝斯｜东南雪莲山 Funk</b><br>
+    <sub>A funk cover of "Dongnan Shan" in Higashi Yukiren's voice —
+    separation, SVC, mix, and release video all produced with this pipeline.</sub>
+  </p>
+  <p>
+    <a href="https://www.bilibili.com/video/BV14kMh6WEH9/">
+      <img src="https://img.shields.io/badge/Bilibili-%E2%96%B6%EF%B8%8E%20Watch-00A1D6?style=for-the-badge&logo=bilibili&logoColor=white"
+           alt="Watch on Bilibili"></a>
+  </p>
+  <sub>Published with Bilibili's AI-generated-content label ·
+  project files in <a href="southeast_ascetic_mountain_funk/"><code>southeast_ascetic_mountain_funk/</code></a></sub>
+</div>
 
 ## Layout
 
