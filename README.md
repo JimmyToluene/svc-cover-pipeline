@@ -41,6 +41,7 @@ complete example from a real production.
 - [Workflow](#workflow)
 - [Example projects](#example-projects)
 - [Attribution and usage](#attribution-and-usage)
+- [Acknowledgments](#acknowledgments)
 - [License](#license)
 
 ## Layout
@@ -144,6 +145,13 @@ publishing, credit the original composer and lyricist (including the author of
 any lyric version yours derives from) and follow your platform's AI-generated
 content labeling rules. Voice models, audio, and model weights are not tracked
 in this repository.
+
+## Acknowledgments
+
+This project is developed with [Claude Code](https://claude.com/claude-code)
+(Claude Fable 5): pipeline scripts, lyric revision tooling, and documentation
+were written in collaboration, with the model credited as co-author in the
+commit history. Listening judgments, SynthV tuning, and final picks are human.
 
 ## License
 
