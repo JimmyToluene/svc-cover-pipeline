@@ -1,8 +1,14 @@
-<a href="https://claude.com/claude-code">
-  <img src="assets/thanks_banner_v2.svg" width="320" align="right"
-       alt="Special thanks to Claude Fable for making this project possible"></a>
+<table border="0">
+<tr>
+<td width="70%"><h1>SVC-Cover-Pipeline</h1></td>
+<td align="right">
+  <a href="https://claude.com/claude-code">
+    <img src="assets/thanks_banner_v2.svg" width="280"
+         alt="Special thanks to Claude Fable for making this project possible"></a>
+</td>
+</tr>
+</table>
 
-# SVC-Cover-Pipeline
 A command-line pipeline for AI singing covers: Synthesizer V source vocals →
 [so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
 conversion → mix, subtitles, and release video with ffmpeg.
