@@ -1,7 +1,7 @@
 # SVC-Cover-Pipeline
 
 <a href="https://claude.com/claude-code">
-  <img src="assets/thanks_banner.svg" width="400"
+  <img src="assets/thanks_banner_v2.svg" width="320"
        alt="Special thanks to Claude Fable for making this project possible"></a>
 
 A command-line pipeline for AI singing covers: Synthesizer V source vocals →
