@@ -1,4 +1,4 @@
-# svc-cover-pipeline
+# SVC-Cover-Pipeline
 
 A command-line pipeline for AI singing covers: Synthesizer V source vocals →
 [so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
@@ -45,7 +45,7 @@ complete example from a real production.
 ## Layout
 
 ```
-svc-cover-pipeline/
+SVC-Cover-Pipeline/
 ├── scripts/                  # generic pipeline — song-agnostic
 │   ├── project_paths.py      #   shared --project resolution
 │   ├── new_project.py        #   scaffold a new song project
