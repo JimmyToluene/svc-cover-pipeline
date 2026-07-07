@@ -2,7 +2,9 @@
 
 <h1>SVC-Cover-Pipeline</h1>
 
-A command-line pipeline for AI singing covers: Synthesizer V source vocals →
+A command-line pipeline for AI singing covers: 
+
+Synthesizer V source vocals →
 [so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
 conversion → mix, subtitles, and release video with ffmpeg.
 
