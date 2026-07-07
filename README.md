@@ -1,8 +1,10 @@
 # SVC-Cover-Pipeline
 
-<a href="https://claude.com/claude-code">
-  <img src="https://img.shields.io/badge/Special%20thanks%20to-Claude%20Fable-D97757?style=for-the-badge&logo=claude&logoColor=white"
-       alt="Special thanks to Claude Fable"></a>
+```
+ ▐▛███▜▌
+▝▜█ᵔ‿ᵔ█▛▘   Special thanks to Claude Fable
+  ▘▘ ▝▝
+```
 
 A command-line pipeline for AI singing covers: Synthesizer V source vocals →
 [so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
