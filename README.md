@@ -1,10 +1,7 @@
 # SVC-Cover-Pipeline
 
-```
- ▐▛███▜▌
-▝▜█ᵔ‿ᵔ█▛▘   Special thanks to Claude Fable
-  ▘▘ ▝▝
-```
+<img src="assets/borris.svg" width="86" alt="Borris, the Claude Code mascot, squinting happily"><br>
+<sub>Special thanks to <a href="https://claude.com/claude-code">Claude Fable</a></sub>
 
 A command-line pipeline for AI singing covers: Synthesizer V source vocals →
 [so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
@@ -65,6 +62,7 @@ SVC-Cover-Pipeline/
 │   ├── make_release.py       #   static-cover release video
 │   └── make_release_v2.py    #   two-image release video with animated waveform
 ├── requirements.txt
+├── assets/                   # README art
 ├── sample/                   # example project: see "Example projects" below
 ├── southeast_ascetic_mountain_funk/   # released cover: see "Showcase" above
 └── <project>/                # one directory per song, created by new_project.py
