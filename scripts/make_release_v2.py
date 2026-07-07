@@ -15,8 +15,8 @@ waveform animation / embedded thumbnail.
 
 Example:
   python3 scripts/make_release_v2.py \
-      --cover nianzhangshi/refs/Azuma_Cover_v2.png \
-      --content nianzhangshi/refs/Azuma_Content_v2.png
+      --cover sample/refs/Azuma_Cover_v2.png \
+      --content sample/refs/Azuma_Content_v2.png
 """
 
 import argparse

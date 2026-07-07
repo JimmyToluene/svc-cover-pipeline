@@ -9,7 +9,7 @@ project directory.
 The project directory is determined in this order:
   1. --project on the command line (absolute, or relative to the repo root)
   2. the SVC_PROJECT environment variable
-  3. the default, nianzhangshi
+If neither is given, the script exits with an error.
 
 To start a new project: python scripts/new_project.py <name> scaffolds an empty
 directory tree.
@@ -25,14 +25,19 @@ SUBDIRS = ("refs", "lyrics", "lyrics/drafts", "vocal", "vocal/svc_out",
 
 
 def add_project_arg(ap):
+    env = os.environ.get("SVC_PROJECT")
     ap.add_argument("--project", type=Path,
-                    default=Path(os.environ.get("SVC_PROJECT", "nianzhangshi")),
+                    default=Path(env) if env else None,
                     help="project directory (absolute or relative to the repo root; "
-                         "default $SVC_PROJECT, else nianzhangshi)")
+                         "default $SVC_PROJECT)")
 
 
 def resolve_project(args) -> Path:
     """Resolve args.project to an existing absolute path, store it back on args.project, and return it."""
+    if args.project is None:
+        print("[project] error: no project given — pass --project <dir> or set $SVC_PROJECT",
+              file=sys.stderr)
+        sys.exit(1)
     p = args.project.expanduser()
     if not p.is_absolute():
         p = REPO / p

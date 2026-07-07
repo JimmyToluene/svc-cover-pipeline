@@ -44,7 +44,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 # --board: pin the lyrics to a fixed blank area of the background image
 # (chalk look: no outline + slight blur); tune the coordinates with
 # --board-jp/--board-cn per the actual image. Defaults were measured on the
-# nianzhangshi project's Azuma_Content_v2.png inner frame (1672x941 → 1920x1080
+# sample project's Azuma_Content_v2.png inner frame (1672x941 → 1920x1080
 # uniform scale 1.1483): inner trim frame x 155-705 / y 110-545 → after scaling,
 # center x≈494, JP y≈340 / CN y≈432.
 BOARD_HEADER = """[Script Info]

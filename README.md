@@ -7,30 +7,43 @@ subtitled, and rendered into a release video with ffmpeg.
 
 The repository separates the reusable pipeline from song data: `scripts/` is
 song-agnostic, and each song lives in its own project directory. Every script
-takes `--project <dir>` (default: `$SVC_PROJECT`, falling back to
-`nianzhangshi`) and resolves all of its default paths inside that directory.
+takes `--project <dir>` (default: the `$SVC_PROJECT` environment variable),
+and resolves all of its default paths inside that directory. `sample/` is a
+complete example project taken from a real production.
+
+## Contents
+
+- [Layout](#layout)
+- [Requirements](#requirements)
+- [Workflow](#workflow)
+- [Sample project](#sample-project)
+- [Attribution and usage](#attribution-and-usage)
+- [License](#license)
 
 ## Layout
 
 ```
-scripts/            Generic pipeline (song-agnostic)
-  project_paths.py    Shared --project resolution
-  new_project.py      Scaffold a new song project
-  separate.py         Split reference audio into instrumental + vocals (BS-Roformer)
-  svc_infer.py        so-vits-svc inference over a parameter grid
-  mix.py              Vocal chain, loudness-matched mixdown (-14 LUFS)
-  auto_line_times.py  ASR-based subtitle timing draft (faster-whisper + DP alignment)
-  make_subs.py        Bilingual .ass subtitles from lyrics + timing
-  make_release.py     Static-cover release video
-  make_release_v2.py  Two-image release video with animated waveform
-<project>/          One directory per song, created by new_project.py:
-  refs/     reference audio, mora budget, subtitle timing
-  lyrics/   drafts and final.md (JP / romaji / CN table)
-  vocal/    SynthV dry vocal and svc_out/ conversion results
-  models/   so-vits-svc model directory (G_*.pth + config.json, optional diffusion)
-  inst/     instrumental (provided or separated)
-  output/   mix, subtitles, release video
-  docs/     per-song notes and comparison tables
+svc-cover-pipeline/
+├── scripts/                  # generic pipeline — song-agnostic
+│   ├── project_paths.py      #   shared --project resolution
+│   ├── new_project.py        #   scaffold a new song project
+│   ├── separate.py           #   split reference audio into instrumental + vocals (BS-Roformer)
+│   ├── svc_infer.py          #   so-vits-svc inference over a parameter grid
+│   ├── mix.py                #   vocal chain, loudness-matched mixdown (-14 LUFS)
+│   ├── auto_line_times.py    #   ASR subtitle-timing draft (faster-whisper + DP alignment)
+│   ├── make_subs.py          #   bilingual .ass subtitles from lyrics + timing
+│   ├── make_release.py       #   static-cover release video
+│   └── make_release_v2.py    #   two-image release video with animated waveform
+├── requirements.txt
+├── sample/                   # example project — see "Sample project" below
+└── <project>/                # one directory per song, created by new_project.py
+    ├── refs/                 #   reference audio, mora budget, subtitle timing
+    ├── lyrics/               #   drafts and final.md (lyrics / romaji / gloss)
+    ├── vocal/                #   SynthV dry vocal; svc_out/ = conversion results
+    ├── models/               #   so-vits-svc model dir (G_*.pth + config.json, optional diffusion)
+    ├── inst/                 #   instrumental (provided or separated)
+    ├── output/               #   mix, subtitles, release video
+    └── docs/                 #   per-song notes and comparison tables
 ```
 
 ## Requirements
@@ -71,8 +84,22 @@ python scripts/make_release_v2.py --project mysong \
 ```
 
 Every script supports `--help`; defaults not listed here follow the
-`<project>/` layout above. Per-song working notes under `<project>/docs/` are
-written in Chinese.
+`<project>/` layout above.
+
+## Sample project
+
+`sample/` is a snapshot of the text assets from a finished production — a
+Japanese-language cover of "Nian Zhang Shi" converted to the voice of Higashi
+Yukiren. It shows what each part of a project directory looks like in practice:
+
+- `sample/lyrics/` — draft revisions (v1 → v3) and `final.md`, a
+  lyrics / romaji / English-gloss table with per-line mora counts
+- `sample/refs/` — the mora budget and subtitle-timing TSVs, cover art
+- `sample/docs/` — phase-by-phase working notes: mora verification, SynthV
+  tuning notes, the SVC parameter-grid comparison, and mixing/release notes
+
+Audio, video, and model weights are excluded (see `.gitignore`); only the
+text and image assets that document the process are kept.
 
 ## Attribution and usage
 
