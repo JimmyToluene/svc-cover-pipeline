@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-"""Phase 4 — ASR 自动生成字幕时间轴(<project>/refs/line_times.tsv 初稿)。
+"""Phase 4 — ASR-based automatic subtitle timing (first draft of <project>/refs/line_times.tsv).
 
-原理:对分离人声(默认 <project>/inst/ 下唯一的 vocals_ref_*.wav)跑
-faster-whisper 词级时间戳,词流假名化后与 lyrics/final.md 的歌词行做单调 DP
-对齐,行首/行尾时间写入 refs/line_times.tsv(make_subs.py 的输入格式,
-含结束时间,避免间奏字幕悬挂)。
+How it works: run faster-whisper with word-level timestamps on the separated
+vocals (default: the single vocals_ref_*.wav under <project>/inst/), convert
+the word stream to kana, then align it against the lyric lines in
+lyrics/final.md with a monotonic DP. Line start/end times are written to
+refs/line_times.tsv (the input format for make_subs.py, end times included so
+subtitles don't linger through instrumental breaks).
 
-时间基:参照人声与 preview_mix/final_mix 一致(mix.py vocal-shift=0,仅尾部垫 3s),
-时间戳可直接用于成品字幕;若 mix 时用了 --vocal-shift,make_subs.py --shift 同值。
+Time base: the reference vocals line up with preview_mix/final_mix (mix.py
+vocal-shift=0, only 3s of tail padding), so the timestamps can be used for the
+final subtitles as-is; if you mixed with --vocal-shift, pass the same value to
+make_subs.py --shift.
 
-ASR 对歌声转写不完美,输出是**初稿**:发布前抽查 4-6 行(首行、副歌、
-间奏后的行最易错)。整体偏移用 make_subs.py --shift,不逐行改。
+ASR transcription of singing is imperfect, so the output is a FIRST DRAFT:
+spot-check 4-6 lines before release (the first line, the chorus, and lines
+right after instrumental breaks are the most error-prone). Fix global offsets
+with make_subs.py --shift rather than editing lines one by one.
 
-用法(phase4 env,首跑会下载 whisper 模型):
-  conda run -n phase4 python scripts/auto_line_times.py             # 写 tsv
-  conda run -n phase4 python scripts/auto_line_times.py --dry-run   # 只看对齐表
+Usage (phase4 env; the first run downloads the whisper model):
+  conda run -n phase4 python scripts/auto_line_times.py             # write the tsv
+  conda run -n phase4 python scripts/auto_line_times.py --dry-run   # just print the alignment table
 """
 
 import argparse
@@ -29,7 +35,7 @@ from project_paths import add_project_arg, resolve_project  # noqa: E402
 
 
 def die(msg):
-    print(f"[align] 错误: {msg}", file=sys.stderr)
+    print(f"[align] error: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
@@ -38,41 +44,51 @@ def default_vocals(proj: Path) -> Path:
     if len(cands) == 1:
         return cands[0]
     if not cands:
-        die(f"{proj / 'inst'} 下没有 vocals_ref_*.wav(先跑 separate.py),"
-            "或用 --vocals 指定")
-    die(f"{proj / 'inst'} 下有多个参照人声 {[p.name for p in cands]},用 --vocals 指定")
+        die(f"no vocals_ref_*.wav under {proj / 'inst'} (run separate.py first), "
+            "or specify one with --vocals")
+    die(f"multiple reference vocals under {proj / 'inst'}: {[p.name for p in cands]}; "
+        "specify one with --vocals")
 
 
 KANA_RE = re.compile(r"[ぁ-ゖー]")
+HAN_RE = re.compile(r"[一-鿿]")
 
 
-def make_kana_fn():
-    import pykakasi
-    kks = pykakasi.kakasi()
+def make_norm_fn(lang: str):
+    """Normalizer for lyric/ASR words: ja = kana-ize (align at the reading level), zh = keep Han characters only."""
+    if lang == "ja":
+        import pykakasi
+        kks = pykakasi.kakasi()
 
-    def to_kana(text: str) -> str:
-        hira = "".join(w["hira"] for w in kks.convert(text))
-        return "".join(KANA_RE.findall(hira))
+        def to_kana(text: str) -> str:
+            hira = "".join(w["hira"] for w in kks.convert(text))
+            return "".join(KANA_RE.findall(hira))
 
-    return to_kana
+        return to_kana
+
+    def to_han(text: str) -> str:
+        return "".join(HAN_RE.findall(text))
+
+    return to_han
 
 
-def transcribe(vocals: Path, model_name: str, device: str):
+def transcribe(vocals: Path, model_name: str, device: str, lang: str):
     from faster_whisper import WhisperModel
     compute = "float16" if device == "cuda" else "int8"
-    print(f"[align] 加载 whisper {model_name} ({device}/{compute})…")
+    print(f"[align] loading whisper {model_name} ({device}/{compute})…")
     model = WhisperModel(model_name, device=device, compute_type=compute)
-    kwargs = dict(language="ja", word_timestamps=True,
+    kwargs = dict(language=lang, word_timestamps=True,
                   vad_filter=True, condition_on_previous_text=False, beam_size=5)
     try:
         segments, info = model.transcribe(str(vocals), **kwargs)
-        segments = list(segments)  # 生成器在此触发实际推理
+        segments = list(segments)  # consuming the generator triggers the actual inference
     except RuntimeError as e:
         if device == "cuda" and "libcublas" in str(e):
-            # ctranslate2 要 CUDA12 的 cublas/cudnn;env 里是 CUDA13 时借 pip 包:
-            # pip install nvidia-cublas-cu12 nvidia-cudnn-cu12 并把两个 lib 目录
-            # 加进 LD_LIBRARY_PATH。这里先降级 CPU 保证能出结果。
-            print("[align] ⚠ CUDA 库缺 libcublas.so.12,降级 CPU/int8(慢但可用)")
+            # ctranslate2 needs CUDA 12's cublas/cudnn; when the env is on CUDA 13,
+            # borrow the pip packages: pip install nvidia-cublas-cu12 nvidia-cudnn-cu12
+            # and add both lib directories to LD_LIBRARY_PATH. For now, fall back to
+            # CPU so we still get a result.
+            print("[align] ⚠ CUDA libs missing libcublas.so.12; falling back to CPU/int8 (slow but works)")
             model = WhisperModel(model_name, device="cpu", compute_type="int8")
             segments, info = model.transcribe(str(vocals), **kwargs)
             segments = list(segments)
@@ -84,21 +100,22 @@ def transcribe(vocals: Path, model_name: str, device: str):
             t = w.word.strip()
             if t:
                 words.append((w.start, w.end, t))
-    print(f"[align] ASR: {len(words)} 词,音频 {info.duration:.1f}s")
+    print(f"[align] ASR: {len(words)} words, audio {info.duration:.1f}s")
     return words
 
 
 def align(lines_kana, words_kana, max_span=40, skip_penalty=0.5):
-    """单调 DP:词流切成 len(lines) 个连续组(组间允许跳词)。
+    """Monotonic DP: split the word stream into len(lines) consecutive groups (words may be skipped between groups).
 
-    f[i][k] = 前 i 个词、已完成 k 行的最优分。返回每行 (词起, 词止) 下标。
+    f[i][k] = best score after consuming i words with k lines completed.
+    Returns (word start, word end) indices for each line.
     """
     W, L = len(words_kana), len(lines_kana)
     NEG = float("-inf")
     f = [[NEG] * (L + 1) for _ in range(W + 1)]
     bp = [[None] * (L + 1) for _ in range(W + 1)]
     f[0][0] = 0.0
-    # 前缀假名串,快速取词段文本
+    # prefix kana strings, for fast lookup of a word span's text
     pref = [""]
     for wk in words_kana:
         pref.append(pref[-1] + wk)
@@ -107,11 +124,11 @@ def align(lines_kana, words_kana, max_span=40, skip_penalty=0.5):
         for k in range(L + 1):
             if f[i][k] == NEG:
                 continue
-            if i < W:  # 跳过词 i(间奏杂音/幻听)
+            if i < W:  # skip word i (interlude noise / hallucination)
                 cand = f[i][k] - skip_penalty
                 if cand > f[i + 1][k]:
                     f[i + 1][k], bp[i + 1][k] = cand, ("skip", i, k)
-            if k < L:  # 词 i..j-1 归为第 k 行
+            if k < L:  # assign words i..j-1 to line k
                 target = lines_kana[k]
                 for j in range(i + 1, min(i + max_span, W) + 1):
                     chunk = pref[j][len(pref[i]):]
@@ -121,10 +138,10 @@ def align(lines_kana, words_kana, max_span=40, skip_penalty=0.5):
                     cand = f[i][k] + sim * max(len(target), 1)
                     if cand > f[j][k + 1]:
                         f[j][k + 1], bp[j][k + 1] = cand, ("line", i, k)
-    # 允许尾部跳词:取 f[i][L] 最优
+    # allow skipping trailing words: take the best f[i][L]
     best_i = max(range(W + 1), key=lambda i: f[i][L])
     if f[best_i][L] == NEG:
-        die("DP 对齐失败(ASR 词数太少?先 --dry-run 看转写结果)")
+        die("DP alignment failed (too few ASR words? Try --dry-run to inspect the transcription)")
     spans, i, k = [None] * L, best_i, L
     while k > 0 or (bp[i][k] is not None):
         move = bp[i][k]
@@ -137,7 +154,7 @@ def align(lines_kana, words_kana, max_span=40, skip_penalty=0.5):
         else:
             i, k = pi, pk
     if any(s is None for s in spans):
-        die("DP 回溯不完整,提高 --max-span 再试")
+        die("DP backtrace incomplete; retry with a higher --max-span")
     return spans, f[best_i][L]
 
 
@@ -146,17 +163,23 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     add_project_arg(ap)
     ap.add_argument("--vocals", type=Path, default=None,
-                    help="对齐用人声,默认 <project>/inst/ 下唯一的 vocals_ref_*.wav")
+                    help="vocals to align against; default: the single vocals_ref_*.wav under <project>/inst/")
     ap.add_argument("--lyrics", type=Path, default=None,
-                    help="默认 <project>/lyrics/final.md")
+                    help="default: <project>/lyrics/final.md")
     ap.add_argument("--out", type=Path, default=None,
-                    help="默认 <project>/refs/line_times.tsv")
+                    help="default: <project>/refs/line_times.tsv")
     ap.add_argument("--model", default="large-v3-turbo")
+    ap.add_argument("--lang", default="ja", choices=["ja", "zh"],
+                    help="lyrics language: ja = align on kana, zh = align on Han characters")
     ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
-    ap.add_argument("--max-span", type=int, default=40, help="一行最多吃多少个 ASR 词")
-    ap.add_argument("--lead-in", type=float, default=0.15, help="字幕相对发声提前秒数")
-    ap.add_argument("--tail", type=float, default=0.35, help="行尾字幕延留秒数")
-    ap.add_argument("--dry-run", action="store_true", help="只打印对齐表,不写文件")
+    ap.add_argument("--max-span", type=int, default=40,
+                    help="max number of ASR words a single line may absorb")
+    ap.add_argument("--lead-in", type=float, default=0.15,
+                    help="seconds a subtitle appears ahead of the vocal onset")
+    ap.add_argument("--tail", type=float, default=0.35,
+                    help="seconds a subtitle lingers past the end of the line")
+    ap.add_argument("--dry-run", action="store_true",
+                    help="only print the alignment table, write nothing")
     args = ap.parse_args()
     proj = resolve_project(args)
     args.vocals = args.vocals or default_vocals(proj)
@@ -165,22 +188,22 @@ def main():
 
     for p in (args.vocals, args.lyrics):
         if not p.is_file():
-            die(f"文件不存在: {p}")
-    lyrics = parse_lyrics(args.lyrics)  # {n: (jp, cn)}
+            die(f"file not found: {p}")
+    lyrics = parse_lyrics(args.lyrics)  # {n: (main line, sub line)}
     order = sorted(lyrics)
-    to_kana = make_kana_fn()
-    lines_kana = [to_kana(lyrics[n][0]) for n in order]
+    norm = make_norm_fn(args.lang)
+    lines_kana = [norm(lyrics[n][0]) for n in order]
 
-    words = transcribe(args.vocals, args.model, args.device)
+    words = transcribe(args.vocals, args.model, args.device, args.lang)
     if len(words) < len(order):
-        die(f"ASR 只出了 {len(words)} 词,少于 {len(order)} 行,无法对齐")
-    words_kana = [to_kana(t) for _, _, t in words]
+        die(f"ASR produced only {len(words)} words, fewer than {len(order)} lines; cannot align")
+    words_kana = [norm(t) for _, _, t in words]
 
     spans, score = align(lines_kana, words_kana, max_span=args.max_span)
-    print(f"[align] DP 总分 {score:.1f}(满分≈{sum(len(k) for k in lines_kana)})\n")
+    print(f"[align] DP total score {score:.1f} (max ≈ {sum(len(k) for k in lines_kana)})\n")
 
     rows, warn = [], []
-    print(f"{'行':>3} {'开始':>7} {'结束':>7} {'相似度':>5}  ASR 转写 → 歌词")
+    print(f"{'ln':>3} {'start':>7} {'end':>7} {'sim':>5}  ASR transcription → lyric")
     for idx, n in enumerate(order):
         wi, wj = spans[idx]
         start, end = words[wi][0], words[wj - 1][1]
@@ -194,7 +217,7 @@ def main():
             warn.append(n)
         rows.append((n, start, end))
 
-    # 字幕化:提前量/延留,且不与相邻行重叠
+    # subtitle shaping: lead-in/tail padding, without overlapping adjacent lines
     out_rows = []
     for idx, (n, start, end) in enumerate(rows):
         s = max(start - args.lead_in, 0.0)
@@ -208,16 +231,16 @@ def main():
         out_rows.append((n, s, e))
 
     if warn:
-        print(f"\n[align] ⚠ 相似度<50% 的行: {warn} —— 这几行时间可能不准,重点抽查")
+        print(f"\n[align] ⚠ lines with similarity < 50%: {warn} — their timing may be off; spot-check these first")
     if args.dry_run:
-        print("[align] --dry-run,未写文件")
+        print("[align] --dry-run, nothing written")
         return
-    hdr = ("# 行号\t开始\t结束\t参考(勿改动列顺序;结束可留空)\n"
-           "# 本文件由 scripts/auto_line_times.py(ASR)自动生成,是初稿;\n"
-           "# 发布前抽查首行/副歌/间奏后各行,整体偏移用 make_subs.py --shift 修\n")
+    hdr = ("# line\tstart\tend\treference (keep the column order; end may be left blank)\n"
+           "# Auto-generated by scripts/auto_line_times.py (ASR) — this is a first draft;\n"
+           "# spot-check the first line / chorus / post-interlude lines before release; fix global offsets with make_subs.py --shift\n")
     body = "".join(f"{n}\t{s:.2f}\t{e:.2f}\t{lyrics[n][0]}\n" for n, s, e in out_rows)
     args.out.write_text(hdr + body, encoding="utf-8")
-    print(f"[align] 写入 {args.out}({len(out_rows)} 行)")
+    print(f"[align] wrote {args.out} ({len(out_rows)} lines)")
 
 
 if __name__ == "__main__":

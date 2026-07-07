@@ -1,13 +1,13 @@
-# 行号	开始	结束	参考(勿改动列顺序;结束可留空;Nr=第N行重复演唱)
-# 时间轴口径:refs/anon_version.mp3 / inst/vocals_ref_*.wav / output/preview_mix.wav
-#   共用同一时间基(mix.py vocal-shift=0,仅尾部垫 3s)。
-# 生成方式(2026-07-05):faster-whisper large-v3-turbo 词级 ASR + RMS 乐句分段
-#   互相印证;副歌重复段用「副歌1 → 尾段偏移 +74.53s」镜像校核,三方一致。
-# ⚠ 重要结构发现:该音频实际只唱 20 句 = 1-16 + 副歌(7/8/9/10)重复;
-#   v1 文档中的桥段(17-20)与副歌2独有句(23/25)不在音频里
-#   (证据:尾段 MFCC 相似度 0.838 vs 控制对 0.359;ASR 加提示词仍转写出
-#   そっとそっと。详见 docs/phase0_notes.md 附录)。
-# 已含 0.15s 提前量与 ≤0.35s 延留;整体偏移用 make_subs.py --shift。
+# Line	Start	End	Reference (do not change column order; End may be left empty; Nr = repeat performance of line N)
+# Timeline basis: refs/anon_version.mp3 / inst/vocals_ref_*.wav / output/preview_mix.wav
+#   all share the same time base (mix.py vocal-shift=0; only 3s of padding at the tail).
+# Generation method (2026-07-05): faster-whisper large-v3-turbo word-level ASR + RMS phrase segmentation,
+#   cross-validated; the repeated chorus was mirror-checked via "chorus 1 → tail-section offset +74.53s"; all three agree.
+# ⚠ Important structural finding: the audio actually sings only 20 lines = 1-16 + a repeat of the chorus (7/8/9/10);
+#   the bridge (17-20) and the chorus-2-only lines (23/25) from the v1 document are not in the audio
+#   (evidence: tail-section MFCC similarity 0.838 vs control pair 0.359; even with a prompt, ASR still transcribes
+#   そっとそっと. See the appendix of docs/phase0_notes.md for details).
+# Already includes a 0.15s lead-in and ≤0.35s hold-over; apply a global offset with make_subs.py --shift.
 1	15.83	22.39	教壇で僕らに難題を明るく
 2	22.70	29.84	ペンと黒板眠い目蓋を照らす
 3	29.94	37.20	言葉は熱を帯びて僕らに届く

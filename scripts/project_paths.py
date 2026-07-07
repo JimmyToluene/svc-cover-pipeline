@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-"""通用工程路径解析 — 所有脚本共享的 --project 机制。
+"""Shared project path resolution — the --project mechanism used by every script.
 
-repo 布局:scripts/ 是通用管线,每首歌一个工程目录(含 refs/lyrics/vocal/
-inst/models/output/docs 七个子目录)。脚本内所有默认路径都相对工程目录解析。
+Repo layout: scripts/ is the song-agnostic pipeline; each song gets its own
+project directory (with the seven subdirectories refs/lyrics/vocal/inst/models/
+output/docs). All default paths inside the scripts resolve relative to the
+project directory.
 
-工程目录的确定顺序:
-  1. 命令行 --project(绝对路径,或相对 repo 根)
-  2. 环境变量 SVC_PROJECT
-  3. 默认 nianzhangshi
+The project directory is determined in this order:
+  1. --project on the command line (absolute, or relative to the repo root)
+  2. the SVC_PROJECT environment variable
+  3. the default, nianzhangshi
 
-新开工程:python scripts/new_project.py <名字> 脚手架一套空目录。
+To start a new project: python scripts/new_project.py <name> scaffolds an empty
+directory tree.
 """
 
 import os
@@ -24,18 +27,18 @@ SUBDIRS = ("refs", "lyrics", "lyrics/drafts", "vocal", "vocal/svc_out",
 def add_project_arg(ap):
     ap.add_argument("--project", type=Path,
                     default=Path(os.environ.get("SVC_PROJECT", "nianzhangshi")),
-                    help="工程目录(绝对路径或相对 repo 根;"
-                         "默认 $SVC_PROJECT,否则 nianzhangshi)")
+                    help="project directory (absolute or relative to the repo root; "
+                         "default $SVC_PROJECT, else nianzhangshi)")
 
 
 def resolve_project(args) -> Path:
-    """把 args.project 解析成存在的绝对路径,顺便挂到 args.project 上返回。"""
+    """Resolve args.project to an existing absolute path, store it back on args.project, and return it."""
     p = args.project.expanduser()
     if not p.is_absolute():
         p = REPO / p
     if not p.is_dir():
-        print(f"[project] 错误: 工程目录不存在: {p}\n"
-              f"          新开工程: python scripts/new_project.py {args.project}",
+        print(f"[project] error: project directory does not exist: {p}\n"
+              f"          create it with: python scripts/new_project.py {args.project}",
               file=sys.stderr)
         sys.exit(1)
     args.project = p.resolve()

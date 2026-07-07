@@ -1,33 +1,34 @@
-# Pass B(v3)听感检查 checklist
+# Pass B (v3) Listening Check — Checklist
 
-对照 `refs/anon_version.mp3`,基线歌词为 `lyrics/drafts/v2.md`。
-逐行跟唱,重点听两类问题:
-(1) **长音/高音落在闭口元音(i/u)** —— 表现为该字发虚、含混、顶不上去;
-(2) **拗口段** —— 连续 i 段+u 段假名、或拗音密集,快速乐句里咬字打架。
+Compare against `refs/anon_version.mp3`; the baseline lyrics are `lyrics/drafts/v2.md`.
+Sing along line by line, listening mainly for two problem types:
+(1) **Long vowels / high notes landing on closed vowels (i/u)** — the syllable sounds weak, muddy, or can't reach the pitch;
+(2) **Tongue-twister passages** — consecutive i-row + u-row kana, or dense yōon, where articulation collides in fast phrases.
 
-判断标准:跟唱两遍仍觉得别扭/听感浑浊的才标记;v1 能唱顺的不算问题
-(爱音版唱过一遍,证明基本可唱,Pass B 只抓明显不适)。
+Criterion: only flag a line if it still feels awkward / sounds muddy after singing along twice; anything v1 sings smoothly
+doesn't count as a problem (the Anon version has sung it through once, proving it is basically singable —
+Pass B only catches obvious discomfort).
 
-## 逐行检查表(标 ⬜ 的听,标 — 的可跳过)
+## Line-by-line checklist (listen to rows marked ⬜; rows marked — can be skipped)
 
-| 行 | 检查点 | 听什么 | 若有问题,替换方向(v3 落实) |
+| Line | Check point | What to listen for | If problematic, replacement direction (applied in v3) |
 |---|---|---|---|
-| 1 | ⬜ 句尾 明るく(ku) | 尾音是否被吞 | 语序调整让句尾落 a/o 段 |
-| 2 | ⬜ 1つ(hitotsu/ittsu) | v1 实唱哪种,哪种顺口 | SynthV 按实唱版输入 |
-| 5 | ✅ 已定:怖くて | —(2026-07-03 用户确认) | — |
-| 6 | ⬜ 句尾 見ず(zu),段落末可能拖长 | 长音上 u 是否发虚 | 发虚则重写句尾,落开口元音 |
-| 7/21 | ⬜ 副歌 hook 忘られず(zu) | 尾音拖长时是否顶得住 | hook 不轻动;只在明显发虚时议 |
-| 9/24 | ⬜ 覚えてる(ru) 尾音 | 同上 | 同上 |
-| 11 | ⬜ 雪より静(yu-ki-yo-ri-shi-zu) | 连续 i/u 段是否含混 | 含混则换收尾词(如落 o/a 段) |
-| 13 | ⬜ めくる 快速乐句 | 咬字是否打架 | 换 読み返す 系(需对 mora) |
-| 17 | ⬜ 遠くへ行く(to-o-ku-e-yu-ku) | u-e-u 连串是否含混 | 遠くへ 改 遠い方(需对 mora)等 |
-| 20 | ⬜ 句尾 行ける(ru),桥段末 | 长音上是否发虚 | 台词引用句,尽量不动 |
-| 23 | ✅ 已定:歩き続けながら+拆音 | 拆 づ/な 哪个音符,留到 SynthV 对拍时按时值定 | — |
-| 25 | ⬜ 全曲末 心に(ni) | 最后一个音大概率拖最长,i 是否发虚 | 备选:ずっと心へ(e,开口度更好,mora 不变,语义不变) |
-| 其余 | — | v1 唱法无异常,不主动检查 | |
+| 1 | ⬜ line-final 明るく (ku) | whether the final syllable gets swallowed | reorder the phrase so the line ends on an a/o-row syllable |
+| 2 | ⬜ 1つ (hitotsu/ittsu) | which one v1 actually sings, and which is smoother | enter the actually-sung version into SynthV |
+| 5 | ✅ settled: 怖くて | — (confirmed by the user 2026-07-03) | — |
+| 6 | ⬜ line-final 見ず (zu), possibly held at the section end | whether the u sounds weak on the sustained note | if weak, rewrite the line ending to land on an open vowel |
+| 7/21 | ⬜ chorus hook 忘られず (zu) | whether the final syllable holds up when sustained | don't touch the hook lightly; discuss only if clearly weak |
+| 9/24 | ⬜ 覚えてる (ru) final syllable | same as above | same as above |
+| 11 | ⬜ 雪より静 (yu-ki-yo-ri-shi-zu) | whether the consecutive i/u rows sound muddy | if muddy, change the closing word (e.g. land on the o/a row) |
+| 13 | ⬜ めくる in a fast phrase | whether the articulation collides | switch to something in the 読み返す family (mora count must match) |
+| 17 | ⬜ 遠くへ行く (to-o-ku-e-yu-ku) | whether the u-e-u run sounds muddy | e.g. change 遠くへ to 遠い方 (mora count must match) |
+| 20 | ⬜ line-final 行ける (ru), end of the bridge | whether it sounds weak on the sustained note | it's a quoted spoken line — avoid changing it if possible |
+| 23 | ✅ settled: 歩き続けながら + note split | which note gets the split づ/な — decide by note length when beat-matching in SynthV | — |
+| 25 | ⬜ song-final 心に (ni) | the last note is most likely held the longest — does the i go weak | alternative: ずっと心へ (e, better mouth opening, same mora count, same meaning) |
+| Others | — | nothing unusual in the v1 rendition; not actively checked | |
 
-## 记录格式
+## Reporting format
 
-有问题的行记:`行号 + 哪个字 + 症状(发虚/含混/抢拍)`,发回即可,
-我按此出 v3 替换方案(一句一个备选,你逐条采纳)。
-全部无问题 → v2 直接晋级 v3 基线,进入 Pass C(可选)或定稿。
+For problem lines, note: `line number + which syllable + symptom (weak / muddy / rushing the beat)` and send it back —
+I'll produce v3 replacements from that (one alternative per line, for you to adopt item by item).
+If nothing is flagged → v2 is promoted directly to the v3 baseline, and we proceed to Pass C (optional) or finalization.

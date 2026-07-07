@@ -1,55 +1,55 @@
-# Phase 2/3 实操指南 — SynthV 干声 + sovits 环境 + 跑网格
+# Phase 2/3 Hands-On Guide — SynthV Dry Vocal + sovits Environment + Running the Grid
 
-两条线可并行;线 2 约 30–60 分钟一次搞定,线 1 是主要工作量。
-机器:RTX 4090 48G / 驱动 580(CUDA 12 兼容),conda 26.x。
+The two tracks can run in parallel; track 2 takes about 30–60 minutes in one sitting, track 1 is the bulk of the work.
+Machine: RTX 4090 48G / driver 580 (CUDA 12 compatible), conda 26.x.
 
-## 线 2 — so-vits-svc 4.1 环境(可先做,做完能立刻冒烟测试)
+## Track 2 — so-vits-svc 4.1 environment (can be done first; enables an immediate smoke test once finished)
 
-> 2026-07-04 实施记录(线 2 已完成,冒烟测试 2/2 通过,含浅扩散;
-> **用户已听测确认冒烟产物为东雪莲音色**,链路验证闭环):
-> checkout 实际路径 `~/so-vits-sv`(少个 c),env=conda `sovits`
-> (python 3.10, **torch 2.5.1+cu124**——2.12 踩了两个时代坑后降级,见步骤 4)。
-> ffmpeg 装进了 env(conda-forge)而非系统,跑 svc_infer.py 时需
-> `PATH=~/miniforge3/envs/sovits/bin:$PATH` 前缀或先 activate。
-> vocoder 用标准版软链充当 finetuned(`nsf_hifigan_finetuned -> nsf_hifigan`)。
-> svc_infer.py 会给子进程注入 TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1(万一将来升 torch)。
-> 4090 实测:15s 音频每组合 4-5s,整张 6 组合网格约半分钟。
+> 2026-07-04 implementation log (track 2 complete, smoke test passed 2/2, including shallow diffusion;
+> **the user has listened and confirmed the smoke-test output is Higashi Yukiren's voice**, closing the loop on pipeline validation):
+> the checkout's actual path is `~/so-vits-sv` (missing a c), env = conda `sovits`
+> (python 3.10, **torch 2.5.1+cu124** — downgraded after hitting two era-mismatch pitfalls on 2.12, see step 4).
+> ffmpeg was installed into the env (conda-forge) rather than system-wide, so running svc_infer.py needs the
+> `PATH=~/miniforge3/envs/sovits/bin:$PATH` prefix, or activate the env first.
+> The vocoder uses the standard version symlinked to stand in for the finetuned one (`nsf_hifigan_finetuned -> nsf_hifigan`).
+> svc_infer.py injects TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD=1 into its subprocesses (in case torch gets upgraded someday).
+> Measured on the 4090: 15s of audio takes 4-5s per combination; the whole 6-combination grid takes about half a minute.
 
 ```bash
-# 1. 系统依赖(svc_infer.py 的输入下混要用;没 sudo 就 conda 装,见上方记录)
+# 1. System dependencies (needed by svc_infer.py's input downmix; no sudo → install via conda, see the log above)
 sudo apt install -y ffmpeg unzip
 
-# 2. 独立环境(官方钉老版本 Python;3.10 实测 fairseq 还装得上,再高容易翻车)
+# 2. Dedicated environment (upstream pins an old Python; 3.10 verified to still install fairseq — anything newer tends to blow up)
 conda create -n sovits python=3.10 -y
 conda activate sovits
 
-# 3. 代码(4.1-Stable 分支)
+# 3. Code (4.1-Stable branch)
 git clone -b 4.1-Stable --depth 1 https://github.com/svc-develop-team/so-vits-svc.git ~/so-vits-svc
 cd ~/so-vits-svc
 
-# 4. 依赖:先 torch 后 requirements。两个【实测坑】:
-#    (a) pip>=24.1 拒收 omegaconf 2.0.x 的老式元数据 → fairseq 解析无解,先降 pip;
-#    (b) torch 必须钉 2.5.1(与 sovits 4.1 同时代):torch>=2.6 的 weights_only
-#        默认值拒载 fairseq checkpoint,torchaudio>=2.9 的 load() 还要 torchcodec。
+# 4. Dependencies: torch first, then requirements. Two [verified pitfalls]:
+#    (a) pip>=24.1 rejects omegaconf 2.0.x's legacy metadata → fairseq resolution becomes unsolvable; downgrade pip first;
+#    (b) torch must be pinned to 2.5.1 (same era as sovits 4.1): torch>=2.6's weights_only
+#        default refuses to load fairseq checkpoints, and torchaudio>=2.9's load() additionally requires torchcodec.
 pip install "pip<24.1"
 pip install torch==2.5.1 torchaudio==2.5.1
 pip install -r requirements.txt
 
-# 5. 两个必需权重 → pretrain/
+# 5. Two required weights → pretrain/
 wget -O pretrain/checkpoint_best_legacy_500.pt \
   https://huggingface.co/lj1995/VoiceConversionWebUI/resolve/main/hubert_base.pt
 wget https://github.com/yxlllc/RMVPE/releases/download/230917/rmvpe.zip
 unzip rmvpe.zip -d /tmp/rmvpe && mv /tmp/rmvpe/model.pt pretrain/rmvpe.pt && rm rmvpe.zip
 
-# 6.(可选,浅扩散用)vocoder。优先去模型发布页找 nsf_hifigan_finetuned;
-#    找不到就用标准版顶上,软链一下让 diffusion.yaml 的非标准路径也能解析:
+# 6. (Optional, for shallow diffusion) vocoder. First look for nsf_hifigan_finetuned on the model's release page;
+#    if it can't be found, use the standard version instead and symlink it so diffusion.yaml's non-standard path also resolves:
 wget https://github.com/openvpi/vocoders/releases/download/nsf-hifigan-v1/nsf_hifigan_20221211.zip
 unzip nsf_hifigan_20221211.zip -d pretrain/ && rm nsf_hifigan_20221211.zip
 ln -s nsf_hifigan pretrain/nsf_hifigan_finetuned
 ```
 
-**冒烟测试(不用等 SynthV)**:随便一段带人声的音频就行,质量无所谓,
-只验证整条链能跑通(模型加载、rmvpe、输出收集):
+**Smoke test (no need to wait for SynthV)**: any clip with vocals will do, quality irrelevant —
+it only verifies the whole chain runs (model loading, rmvpe, output collection):
 
 ```bash
 cd ~/ai_mad
@@ -57,52 +57,52 @@ ffmpeg -ss 60 -t 15 -i refs/anon_version.mp3 /tmp/smoke.wav
 python3 scripts/svc_infer.py --svc-repo ~/so-vits-svc \
     --python ~/miniforge3/envs/sovits/bin/python \
     --input /tmp/smoke.wav -t 0 --shd off
-# 听 vocal/svc_out/smoke_f0rmvpe_t+0.wav:出来是东雪莲音色(哪怕背景有伴奏糊着)= 链路 OK
-# 装了 vocoder 的话把 --shd off 去掉,顺便验证浅扩散
+# Listen to vocal/svc_out/smoke_f0rmvpe_t+0.wav: if it comes out in Higashi Yukiren's voice (even with instrumental bleed smearing the background) = the chain is OK
+# If the vocoder is installed, drop --shd off and verify shallow diffusion while you're at it
 ```
 
-冒烟产物听完删掉即可(`rm vocal/svc_out/smoke_*`,`docs/svc_grid.md` 里对应批次段落也删掉)。
+Once you've listened, the smoke-test output can be deleted (`rm vocal/svc_out/smoke_*`, and delete the corresponding batch section in `docs/svc_grid.md`).
 
-## 线 1 — SynthV 干声(主要工作量)
+## Track 1 — SynthV dry vocal (the bulk of the work)
 
-细节以 `docs/synthv_notes.md` 为准,这里是操作顺序:
+`docs/synthv_notes.md` is authoritative for the details; this is the order of operations:
 
-1. 新工程,采样率 48kHz,先对 `refs/anon_version.mp3` 定 BPM 和小节线。
-2. 逐句听写音高/时值进钢琴卷帘(以 mp3 为准),每句音符数 = `refs/mora_budget.tsv`
-   配额(行 23 是 14)。
-3. 歌词输入:框选一句的全部音符 → 粘贴 `lyrics/synthv_input.txt` 对应行
-   (空格分隔按音符逐个分配)。促音 t 分配不对时,把该音符歌词手动改 っ(音素 cl)。
-4. 专项检查:促音/長音各占一个音符(so-っ-to、cho-o-ku);行 23 拆音
-   (づ/な 中时值长者对半拆给 け,け ≥ 1/16 音符)。
-5. 按 `docs/synthv_notes.md` 分段调教(主歌 A 克制 → 副歌 vibrato 直进颤出 →
-   行 19 气声极值 → 行 20 说教感顶点 → 行 25 渐弱收)。全局 vibrato depth ~0.6 倍起。
-6. 导出干声(**女声库单路线**,2026-07-04 定案):**无混响、无效果器**,
-   48kHz WAV → `vocal/synthv_source.wav`(跑批脚本的默认输入)。
-   做到"发音无错、乐句成立"即可先交转换,别过度精调。
-7. 走完 `docs/synthv_notes.md` 文末的导出核对清单。
+1. New project, sample rate 48kHz; first set the BPM and bar lines against `refs/anon_version.mp3`.
+2. Transcribe pitch/timing by ear, line by line, into the piano roll (the mp3 is authoritative); each line's note count = the `refs/mora_budget.tsv`
+   budget (line 23 is 14).
+3. Lyric input: box-select all notes of one line → paste the corresponding line of `lyrics/synthv_input.txt`
+   (space-separated tokens are assigned note by note). If a geminate (sokuon) t is assigned wrong, manually change that note's lyric to っ (phoneme cl).
+4. Targeted checks: geminates (sokuon) and long vowels (chōon) each occupy one note (so-っ-to, cho-o-ku); the line 23 note split
+   (whichever of づ/な has the longer duration gets split in half to give a note to け; け ≥ a 1/16-note).
+5. Tune section by section per `docs/synthv_notes.md` (verse A restrained → chorus vibrato straight-in-vibrato-out →
+   line 19 breathiness maximum → line 20 lecturing-tone peak → line 25 fade-out finish). Start with global vibrato depth at ~0.6x.
+6. Export the dry vocal (**single female-voice-database route**, decided 2026-07-04): **no reverb, no effects**,
+   48kHz WAV → `vocal/synthv_source.wav` (the batch script's default input).
+   Reaching "no pronunciation errors, phrases hold together" is enough to hand off for conversion — don't over-polish.
+7. Go through the export checklist at the end of `docs/synthv_notes.md`.
 
-## 汇合 — Phase 3 网格与盲听
+## Merge point — Phase 3 grid and blind listening
 
 ```bash
-# 女声库贴近东雪莲音域,先只跑 t=0(2 个组合:纯 sovits / 浅扩散)
+# The female voice database is close to Higashi Yukiren's range, so run only t=0 first (2 combinations: pure sovits / shallow diffusion)
 export PATH=~/miniforge3/envs/sovits/bin:$PATH
 python3 scripts/svc_infer.py --svc-repo ~/so-vits-sv \
     --python ~/miniforge3/envs/sovits/bin/python \
     --input vocal/synthv_source.wav -t 0
-# 听感发闷/发尖(疑八度不对)才补跑: ... -t 12 -12
+# Only if it sounds muffled/shrill (octave suspect) run the extra pass: ... -t 12 -12
 ```
 
-盲听 `vocal/svc_out/`,备注写进 `docs/svc_grid.md`。判断标准:
+Blind-listen to `vocal/svc_out/` and write your notes into `docs/svc_grid.md`. Criteria:
 
-- **transpose 方向**:声音发闷、像压着嗓子 → 该 +12;发尖、假声感、咬字碎 → 该 −12;
-  自然贴脸 → 0 对了。男声库路线大概率要 +12。
-- **浅扩散 (shd) 版**:电音感/金属毛刺明显减少 → 选 shd;听不出差别 → 选非 shd(省事)。
-- **两路线对比**:哪个声库转出来更像东雪莲本人唱歌、咬字更清楚,就定哪条路线。
+- **transpose direction**: sounds muffled, like singing with a pressed throat → needs +12; sounds shrill, falsetto-like, articulation crumbles → needs −12;
+  natural and convincing → 0 is correct. The male-voice-database route almost certainly needs +12.
+- **Shallow diffusion (shd) version**: electronic/metallic artifacts clearly reduced → pick shd; can't hear a difference → pick non-shd (simpler).
+- **Comparing the two routes**: whichever voice database's output sounds more like Higashi Yukiren herself singing, with clearer articulation, wins.
 
-选定后:
+Once picked:
 
 ```bash
-cp vocal/svc_out/<你选中的文件>.wav vocal/svc_out/selected.wav
+cp vocal/svc_out/<your_chosen_file>.wav vocal/svc_out/selected.wav
 ```
 
-然后告诉我选了哪版 + 简单说下为什么(记进 postmortem),Phase 3 完,进 Phase 4 混音。
+Then tell me which version you picked + briefly why (it goes into the postmortem); Phase 3 is done, on to Phase 4 mixing.

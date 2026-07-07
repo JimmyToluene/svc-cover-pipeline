@@ -1,88 +1,92 @@
-# Phase 0 笔记 — mora 配额统计与待人工核对项
+# Phase 0 Notes — Mora Budget Tally and Items Pending Manual Verification
 
-> **状态:已确认(2026-07-03)。** 用户抽查通过,未报差异,
-> `refs/mora_budget.tsv` 即日起为不变量基准。
-> **⚠ 2026-07-05 附录(见文末):音频实际只唱 20 句,桥段不在音频里。**
-> 遗留听感存疑点(行 11 靜=shi-zu、行 16 方へ=ho-e、行 8 连音)按 v1 演唱口径计,
-> 若后续 SynthV 对拍时发现不符,回来改 tsv 并同步歌词版本。
+> **Status: confirmed (2026-07-03).** The user's spot-check passed with no discrepancies reported;
+> `refs/mora_budget.tsv` is the invariant baseline from this point on.
+> **⚠ 2026-07-05 addendum (see end of document): the audio actually sings only 20 lines; the bridge is not in the audio.**
+> The remaining open questions from listening (line 11 靜 = shi-zu, line 16 方へ = ho-e, line 8 melisma)
+> are counted per the v1 performance; if a mismatch turns up later during SynthV beat-matching,
+> come back to fix the tsv and sync the lyric version.
 
-## 统计口径
+## Counting rules
 
-- 一个音符 = 一个 mora;長音(ー)、促音(っ)、撥音(ん)各计 1;拗音(きゃ/チャ)计 1。
-- 计数依据:**以 v1 自带罗马音为准**(它反映实际演唱),而不是词典读音。
-  两者不一致的行在下表单独标出。
-- 重复段落(21/22/24 行)原文未附罗马音,按首次出现的同句计数。
+- One note = one mora; long vowels (chōon, ー), geminates (sokuon, っ), and the moraic nasal (hatsuon, ん) each count as 1; yōon (きゃ/チャ) count as 1.
+- Counting basis: **the romaji bundled with v1 is authoritative** (it reflects the actual performance), not dictionary readings.
+  Lines where the two disagree are listed separately in the table below.
+- Repeated sections (lines 21/22/24) have no romaji in the source; they are counted the same as their first occurrence.
 
-## 词典读音与 v1 演唱不一致的行(计数已按演唱口径)
+## Lines where the dictionary reading and the v1 performance disagree (counts follow the performance)
 
-| 行 | 位置 | 词典读音 | v1 演唱(罗马音) | 计数影响 |
+| Line | Position | Dictionary reading | v1 performance (romaji) | Impact on count |
 |---|---|---|---|---|
-| 2 | 1つ | ひとつ hi-to-tsu (3) | i-t-tsu「いっつ」(3) | 无(都是 3),但唱法本身要听音确认 |
-| 11 | 靜 | しずか shi-zu-ka (3) | shi-zu (2) | 按 2 计;疑为截断唱法,需听音确认 |
-| 16 | 方へ | ほうへ ho-u-e (3) | ho-e (2) | 按 2 计,需听音确认 |
-| 23 | 歩い続ながら | (语法不成立) | a-ru-i-tsu-zu (5) | 按演唱 8 计(あるいつづながら);Pass A 改成 歩き続けながら 会 +1 mora,需拆音方案 |
+| 2 | 1つ | ひとつ hi-to-tsu (3) | i-t-tsu「いっつ」(3) | None (both are 3), but the delivery itself needs listening confirmation |
+| 11 | 靜 | しずか shi-zu-ka (3) | shi-zu (2) | Counted as 2; likely a truncated delivery, needs listening confirmation |
+| 16 | 方へ | ほうへ ho-u-e (3) | ho-e (2) | Counted as 2, needs listening confirmation |
+| 23 | 歩い続ながら | (ungrammatical) | a-ru-i-tsu-zu (5) | Counted as 8 per the performance (あるいつづながら); the Pass A fix 歩き続けながら adds +1 mora and needs a note-split plan |
 
-罗马音明显错误(**不影响 mora 数**,v2 统一重生成):
-u ga bu(→ukabu, 行14)、me gu ru(→mekuru, 行13)、cyaa ku(→非标准拼写, 行11)、
-wa su ra re zu(忘られず,古语用法,暂保留存疑)。
+Clear romaji errors (**no impact on mora counts**; all romaji is regenerated in v2):
+u ga bu (→ ukabu, line 14), me gu ru (→ mekuru, line 13), cyaa ku (→ non-standard spelling, line 11),
+wa su ra re zu (忘られず, archaic usage, kept for now and flagged as questionable).
 
-## 一音多字/多音候选(听音时重点注意)
+## Candidate melisma / syllable-split spots (pay special attention while listening)
 
-- 行 12「未来は」:罗马音写 ha（wa),确认唱 wa。
-- 行 6 / 17 中的「。」停顿:确认是休止符还是延音。
-- 副歌行(7/9/10)均为 13 mora,行 8 为 14——确认行 8 是否真比其他副歌行多一个音符,
-  还是有连音(两 mora 挤一个音符)。
+- Line 12「未来は」: the romaji is written ha (wa) — confirm it is sung wa.
+- The「。」pauses in lines 6 / 17: confirm whether they are rests or held notes.
+- The chorus lines (7/9/10) are all 13 morae; line 8 is 14 — confirm whether line 8 really has
+  one more note than the other chorus lines, or whether there is a melisma (two morae squeezed into one note).
 
-## 主旋律 MIDI/工程搜索结果(2026-07-03)
+## Melody MIDI / project file search results (2026-07-03)
 
-海外搜索引擎未检索到《念张师》的公开 MIDI/工程文件(B 站站内内容索引不佳)。
-建议你在墙内直接搜:B 站站内「念张师 伴奏 / MIDI / 翻调工程」、midishow.com、
-5sing。若找不到,按 CLAUDE.md Phase 4 兜底:从 `refs/anon_version.mp3`
-做 MDX-Net 分离(其人声为 RVC 干声+混响,分离难度低)。此项不阻塞 Phase 0/1。
+Overseas search engines turned up no publicly posted MIDI/project files for "Nian Zhang Shi"
+(Bilibili's on-site content is poorly indexed). Recommendation: search from inside China yourself —
+on Bilibili for "Nian Zhang Shi instrumental / MIDI / cover-tuning project", plus midishow.com and
+5sing. If nothing turns up, fall back per CLAUDE.md Phase 4: run MDX-Net separation on
+`refs/anon_version.mp3` (its vocal is an RVC dry vocal plus reverb, so separation is easy).
+This does not block Phase 0/1.
 
-## ✅ 需要你做的事(Phase 0 硬门槛,不许跳)
+## ✅ What you need to do (Phase 0 hard gate — cannot be skipped)
 
-对照 `refs/anon_version.mp3` 逐句数音符,抽查以下 6 行(副歌优先),
-确认「该行音符数 == tsv 里的 mora 数」:
+Count the notes line by line against `refs/anon_version.mp3`, spot-checking the following 6 lines
+(chorus first), and confirm that "the line's note count == the mora count in the tsv":
 
-1. 行 7 「雪峰先生忘られず」— 应为 13
-2. 行 8 「そっとそっと僕の手を繋ぐ」— 应为 14(重点:是否有连音)
-3. 行 10 「勇気の全部君がくれた」— 应为 13
-4. 行 11 「チャーク粉肩に乗る雪より靜」— 应为 15(重点:靜 是否只唱 shi-zu 两个音)
-5. 行 16 「逃げわず　その丘の方へ」— 应为 11(重点:方へ 是 ho-e 还是 ho-u-e)
-6. 行 23 「困難も　歩い続ながら」— 应为 13
+1. Line 7「雪峰先生忘られず」— should be 13
+2. Line 8「そっとそっと僕の手を繋ぐ」— should be 14 (key point: is there a melisma)
+3. Line 10「勇気の全部君がくれた」— should be 13
+4. Line 11「チャーク粉肩に乗る雪より靜」— should be 15 (key point: whether 靜 is sung as only two morae, shi-zu)
+5. Line 16「逃げわず　その丘の方へ」— should be 11 (key point: whether 方へ is ho-e or ho-u-e)
+6. Line 23「困難も　歩い続ながら」— should be 13
 
-判断标准:跟着唱数音符;若某行实际音符数与 tsv 不符,记下「行号 + 实际数 +
-哪里一音多字/一字多音」,我来更新 tsv。全部确认后 Phase 0 完成,
-tsv 即成为后续所有修订的不变量基准。
+Criteria: sing along and count the notes; if a line's actual note count differs from the tsv,
+write down "line number + actual count + where one syllable spans multiple notes or one note
+carries multiple syllables", and I will update the tsv. Once everything is confirmed, Phase 0 is
+complete and the tsv becomes the invariant baseline for all subsequent revisions.
 
-## ⚠ 附录(2026-07-05)— 结构发现:音频只唱 20 句,桥段/副歌2独有句缺席
+## ⚠ Addendum (2026-07-05) — Structural discovery: the audio sings only 20 lines; the bridge and the chorus-2-only lines are absent
 
-做字幕时间轴(Phase 4 v2 出片)时发现,`refs/anon_version.mp3` 实际演唱结构为:
+While building the subtitle timeline (Phase 4 v2 render), we found that the structure actually sung in `refs/anon_version.mp3` is:
 
-- 主歌 A(1-6)→ 副歌(7-10)→ 主歌 B(11-16)→ **副歌重复(7/8/9/10 原词)**→ 尾奏
-- v1 文档里的桥段(17-20)与副歌 2 独有句(**23、25**)**不在这份音频里**。
+- Verse A (1–6) → chorus (7–10) → verse B (11–16) → **chorus repeat (lines 7/8/9/10, original words)** → outro
+- The bridge (17–20) from the v1 document and the chorus-2-only lines (**23, 25**) are **not in this audio**.
 
-三条独立证据(结论一致):
+Three independent pieces of evidence (all reaching the same conclusion):
 
-1. **RMS 乐句分段**:尾段(134.4-162.5s)六个乐句时长
-   2.86/2.83/6.29/2.86/6.27/3.11s,与副歌 1(59.8-87.9s)的
-   2.86/2.81/6.32/2.88/6.27/3.09s 逐一吻合,总跨度 28.15s vs 28.09s。
-2. **MFCC 音素相似度**:副歌1 vs 尾段 = 0.838;控制对(副歌1 vs 主歌B同长片段)
-   = 0.359。同旋律不同歌词到不了 0.8+,这是同词重唱(非音频复制,波形相关仅 0.09)。
-3. **对抗 ASR**:把 21-25 的歌词作为 initial_prompt 喂给 faster-whisper
-   large-v3-turbo 单独转写尾段,输出仍是「雪峰先生忘られず。そっとそっと僕の手繋ぐ。
-   雪峰先生…る。…の全部君がくれた」——副歌 1 的词序,含 21-25 里不存在的そっとそっと。
+1. **RMS phrase segmentation**: the six phrase durations of the final section (134.4–162.5s),
+   2.86/2.83/6.29/2.86/6.27/3.11s, match chorus 1 (59.8–87.9s),
+   2.86/2.81/6.32/2.88/6.27/3.09s, one for one; total span 28.15s vs 28.09s.
+2. **MFCC phoneme similarity**: chorus 1 vs final section = 0.838; control pair (chorus 1 vs an equal-length slice of verse B)
+   = 0.359. The same melody with different lyrics does not reach 0.8+ — this is the same lyrics sung again (not an audio copy; waveform correlation is only 0.09).
+3. **Adversarial ASR**: feeding the lyrics of lines 21–25 as the initial_prompt to faster-whisper
+   large-v3-turbo and transcribing just the final section still outputs「雪峰先生忘られず。そっとそっと僕の手繋ぐ。
+   雪峰先生…る。…の全部君がくれた」— the word order of chorus 1, including そっとそっと, which does not appear anywhere in lines 21–25.
 
-**影响与待决(需要用户拍板):**
+**Impact and open decisions (user call required):**
 
-- `docs/synthv_howto.md` 的「386 音符修剪到 342 贴 25 句词」不成立:
-  参照音频里只有 20 句的旋律(约 283 mora + 装饰音)。桥段(17-20)与 23/25
-  的旋律**没有参照**。
-- 选项 A:成品按音频实际结构走(20 句,final.md 的 17-20/23/25 不唱);
-- 选项 B:找 BV139Gm6REz6 完整版音频(当前 mp3 可能是删减版),重跑分离+对轴;
-- 选项 C:桥段自行扒中文原版对应段落的旋律(若中文原版有该段)。
-- v1 照录的 25 句歌词本身不受影响(B 站视频字幕如此);受影响的只是
-  「这份 mp3 参照」能支撑哪些句子的旋律/时值。
+- The claim in `docs/synthv_howto.md` that "386 notes trimmed to 342 to fit the 25 lines of lyrics" no longer holds:
+  the reference audio only contains melody for 20 lines (about 283 morae plus ornaments). The melody of the bridge (17–20) and of lines 23/25
+  has **no reference**.
+- Option A: the final product follows the audio's actual structure (20 lines; lines 17–20/23/25 of final.md are not sung);
+- Option B: find the full-length audio of BV139Gm6REz6 (the current mp3 may be a cut-down version), then redo separation + alignment;
+- Option C: transcribe the bridge melody ourselves from the corresponding section of the original Chinese version (if that section exists there).
+- The 25 lines transcribed verbatim into v1 are themselves unaffected (the Bilibili video's subtitles read that way); what is affected is only
+  which lines this mp3 reference can support in terms of melody/timing.
 
-字幕时间轴(`refs/line_times.tsv`)已按实际 20 句结构填写,重复段标 `7r/8r/9r/10r`。
+The subtitle timeline (`refs/line_times.tsv`) has already been filled in per the actual 20-line structure, with the repeated section marked `7r/8r/9r/10r`.

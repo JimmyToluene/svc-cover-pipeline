@@ -1,70 +1,70 @@
-# SynthV 从零实操 — 免费路线 + 旋律 MIDI 导入(2026-07-04 调研核实)
+# SynthV from Zero, Hands-On — Free Route + Melody MIDI Import (researched and verified 2026-07-04)
 
-目标:一条唱着 **v3 新歌词** 的干净干声 → `vocal/synthv_source.wav`。
-本文只讲怎么做出来;逐句怎么唱见 `docs/synthv_notes.md`。
+Goal: one clean dry vocal singing the **v3 new lyrics** → `vocal/synthv_source.wav`.
+This doc only covers how to produce it; line-by-line singing directions are in `docs/synthv_notes.md`.
 
-## 0. 选哪个版本(调研结论,已核对官方文档)
+## 0. Which version to use (research conclusions, checked against official docs)
 
-| 路线 | 成本 | 关键限制 | 判定 |
+| Route | Cost | Key limitations | Verdict |
 |---|---|---|---|
-| **Studio 1 Basic + 日语 AI lite 声库** | 全免费 | lite 音质上限低、渲染锁 Prefer Speed;3 轨(够);参数面板(tension/breathiness)**可用** | **推荐,先走这条** |
-| Studio 2 Core(免费)+ Mai 2 | 免费 | 只有 DAW 插件形态(无独立界面),发放机制不明 | 备选 |
-| Studio 2 Pro 14 天试用 | 免费试用 | **试用声库禁止导出音频** —— 对我们没用 | 排除 |
-| Studio 2 Pro 买断 | ~$99 + 声库 | 无 | lite 质量真不够再说 |
+| **Studio 1 Basic + Japanese AI lite voice database** | Completely free | lite quality ceiling is low, rendering locked to Prefer Speed; 3 tracks (enough); parameter panel (tension/breathiness) **is available** | **Recommended, start here** |
+| Studio 2 Core (free) + Mai 2 | Free | DAW-plugin form only (no standalone app), distribution mechanism unclear | Backup |
+| Studio 2 Pro 14-day trial | Free trial | **Trial voice databases forbid audio export** — useless for us | Ruled out |
+| Studio 2 Pro purchase | ~$99 + voice database | None | Revisit only if lite quality truly falls short |
 
-要点:
-- **Studio 2 不兼容 V1 lite 声库**(官方明确);免费路线只能用老版 Studio 1 Basic。
-- **Dreamtonics 已宣布停止分发自家 lite 声库**,资源服务器目前还在服——
-  **尽快下载囤好**。
-- lite 的音质上限对本工程影响有限:SVC 会整体替换音色,**咬字清晰度**才是
-  要保住的东西。先试,糊了再考虑付费版。
+Key points:
+- **Studio 2 is not compatible with V1 lite voice databases** (officially stated); the free route can only use the older Studio 1 Basic.
+- **Dreamtonics has announced it is discontinuing distribution of its own lite voice databases**; the resource server is still up for now —
+  **download and stockpile them ASAP**.
+- The lite quality ceiling has limited impact on this project: SVC will replace the timbre wholesale; **articulation clarity** is
+  what must be preserved. Try it first; consider the paid version only if it comes out mushy.
 
-## 1. 下载安装(一次性,约 20 分钟)
+## 1. Download & install (one-time, ~20 minutes)
 
-1. 编辑器:Studio 1 Basic 安装包(AHS 官方还挂着):
-   <https://www.ah-soft.com/trial/synth-v.html>(Windows/macOS/Linux 都有)
-2. 声库(lite 目录,选一个日语女声 AI lite,下 `.svpk`):
+1. Editor: Studio 1 Basic installer (still hosted on AHS's official site):
+   <https://www.ah-soft.com/trial/synth-v.html> (Windows/macOS/Linux all available)
+2. Voice database (lite directory; pick one Japanese female AI lite, download the `.svpk`):
    <https://resource.dreamtonics.com/download/English/Voice%20Databases/Lite%20Voice%20Databases/>
-   候选:**Saki AI Lite**(最常用)、小春六花(rikka-ai-lite)、夏色花梨、鶴巻マキ、
-   重音テト。装法:SynthV 里 拖入 .svpk 或双击。
-3. 授权红线:lite 输出**非商用**(B 站不开充电/商单),发布文案必须标注
-   「Synthesizer V ○○ AI ライト版使用」。这条写进发布 checklist。
+   Candidates: **Saki AI Lite** (most commonly used), 小春六花 (rikka-ai-lite), 夏色花梨, 鶴巻マキ,
+   重音テト. To install: drag the .svpk into SynthV or double-click it.
+3. License red line: lite output is **non-commercial** (no Bilibili charging/sponsored content), and the release
+   description must state 「Synthesizer V ○○ AI ライト版使用」. Add this to the release checklist.
 
-## 2. 建工程(参数都已测好)
+## 2. Create the project (parameters already measured)
 
-- 新建工程,**BPM 132.5**(librosa 实测;若对拍发现是半/倍拍就 66.25/265),4/4。
-- 把 `refs/anon_version.mp3` 拖进伴奏轨(instrumental track)做对拍参照。
+- New project, **BPM 132.5** (measured with librosa; if beat-matching reveals it is half/double time, use 66.25/265), 4/4.
+- Drag `refs/anon_version.mp3` into an instrumental track as a beat-matching reference.
 
-## 3. 导入旋律 MIDI(省掉逐句扒谱)
+## 3. Import the melody MIDI (skips transcribing the melody line by line)
 
-`refs/vocals_ref_anon_version_basic_pitch.mid` 是从分离人声自动转写的旋律
-(basic-pitch,386 音符,音域 F3–C6,人声 16.1s 进)。File → Import 进主音轨后修剪:
+`refs/vocals_ref_anon_version_basic_pitch.mid` is the melody auto-transcribed from the separated vocals
+(basic-pitch, 386 notes, range F3–C6, vocals enter at 16.1s). File → Import into the main vocal track, then trim:
 
-- **目标音符数 342**(mora 总量 341 + 行 23 拆音 1),现有 386,多出的 ~40 个是
-  转写碎片:删掉极短音(< 1/32)、合并同音高的破碎连音、明显八度跳错的孤立音。
-- 逐行核对:每句音符数必须等于 `refs/mora_budget.tsv` 该行配额(行 23 = 14)。
-  这是硬校验,对不上就说明该句修剪错了,别硬贴歌词。
-- 时值对不准的音符对照伴奏轨/原曲手动拖齐。自动转写的音高错误集中在
-  乐句首尾和气声处,重点检查。
+- **Target note count is 342** (total mora count 341 + 1 note split on line 23); there are currently 386. The ~40 extras are
+  transcription fragments: delete very short notes (< 1/32), merge fragmented slurs at the same pitch, and remove isolated notes with obvious octave-jump errors.
+- Verify line by line: each line's note count must equal that line's quota in `refs/mora_budget.tsv` (line 23 = 14).
+  This is a hard check — a mismatch means that line was trimmed wrong; do not force the lyrics onto it anyway.
+- Drag notes with off timing into place against the instrumental track / original song. The auto-transcription's pitch errors
+  cluster at phrase starts/ends and breathy passages — check those closely.
 
-## 4. 贴歌词
+## 4. Paste the lyrics
 
-框选一句的全部音符 → 粘贴 `lyrics/synthv_input.txt` 对应行(空格分隔,
-一个 token 一个音符)。然后按 `lyrics/final.md` 的「演唱口径标注」检查:
-促音/長音各占一音符(so-っ-to、cho-o-ku)、(休止) 处不填音符、行 11 唱 shi-zu、
-行 16 唱 ho-e。促音分配错时把该音符歌词手动改 っ。
+Box-select all notes of one line → paste the corresponding line from `lyrics/synthv_input.txt` (space-separated,
+one token per note). Then check against the "singing convention notes" in `lyrics/final.md`:
+geminate (sokuon) / long vowel (chōon) each take one note (so-っ-to, cho-o-ku), leave (rest) positions without notes, line 11 is sung shi-zu,
+line 16 is sung ho-e. If a sokuon lands on the wrong note, manually change that note's lyric to っ.
 
-## 5. 调教 → 导出
+## 5. Tuning → export
 
-- 按 `docs/synthv_notes.md` 分段处理(它就是为这一步写的)。
-- 导出:Render 面板 → WAV,采样率有 48000 就选,没有就 44100(跑批脚本会
-  自动重采样,无所谓),**不挂任何效果器** → `vocal/synthv_source.wav`。
-- 交付前走 `docs/synthv_notes.md` 文末核对清单。
+- Work section by section per `docs/synthv_notes.md` (it was written for exactly this step).
+- Export: Render panel → WAV; pick 48000 for the sample rate if offered, otherwise 44100 (the batch script
+  resamples automatically, so it doesn't matter), **with no effects applied** → `vocal/synthv_source.wav`.
+- Before handing it off, go through the checklist at the end of `docs/synthv_notes.md`.
 
-## 常见坑
+## Common pitfalls
 
-- lite 声库渲染模式锁 Prefer Speed:导出前找不到质量选项是正常的,就这么导。
-- 罗马音贴上去发音不对时,检查は/へ:输入文件里已按发音写成 wa/e,
-  若手动补词别写成假名助词原形。
-- BPM 如果和你听感对不上(觉得慢一倍),按 66.25 建工程,MIDI 时值不受影响
-  (MIDI 里存的是绝对时间换算)。
+- lite voice databases lock the render mode to Prefer Speed: it is normal not to find a quality option before export — just export as is.
+- If pasted romaji is pronounced wrong, check は/へ: the input file already writes them phonetically as wa/e;
+  if you add words by hand, do not write the kana particles in their orthographic form.
+- If the BPM doesn't match what you hear (feels twice as slow), build the project at 66.25; MIDI note timing is unaffected
+  (MIDI stores absolute time, converted).

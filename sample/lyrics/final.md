@@ -1,51 +1,54 @@
-# 《念张师》日语版 — 歌词定稿(v3,2026-07-03)
+# "Nian Zhang Shi" Japanese Version — Final Lyrics (v3, 2026-07-03)
 
-> **来源声明(任何一版不许删)**:本歌词为 B 站 BV139Gm6REz6
-> (爱音音色版《念张师》日语填词)的**衍生修订版**,以该版为 v1 基线经
-> Pass A(硬错误修正)/ Pass C(表达提升,5 处)修订而成。
-> 公开发布时必须署名原填词作者(该视频 UP 主),最好事先打招呼。
+> **Source attribution (must never be removed from any version)**: These lyrics are a
+> **derivative revision** of the Japanese lyric adaptation of "Nian Zhang Shi" from
+> Bilibili video BV139Gm6REz6 (Anon-voice version), produced from that version as the
+> v1 baseline via Pass A (hard-error fixes) / Pass C (expression upgrades, 5 items).
+> Any public release must credit the original lyricist (the uploader of that video);
+> ideally reach out to them beforehand.
 
-> 罗马音口径:一个空格 = 一个 mora = SynthV 一个音符;助词 は→wa、へ→e;
-> 促音单独占位(SynthV 内输入 っ);(休止) 为乐句内停顿,不占音符。
-> mora 配额来自 `refs/mora_budget.tsv`(Phase 0 用户核对,不变量)。
+> Romaji conventions: one space = one mora = one SynthV note; particles は→wa, へ→e;
+> sokuon occupies its own slot (enter っ in SynthV); (休止) marks an in-phrase pause and does not occupy a note.
+> The mora budget comes from `refs/mora_budget.tsv` (user-verified in Phase 0; treated as an invariant).
 
-| # | 日语 | 罗马音 | 中文对照 | mora(配额) |
+| # | Japanese | Romaji | English gloss | mora (budget) |
 |---|---|---|---|---|
-| 1 | 教壇で僕らに難題を明るく | kyo u da n de bo ku ra ni na n da i wo a ka ru ku | 在讲台上为我们把难题讲得明朗 | 18 (18) |
-| 2 | ペンと黒板眠い目蓋を照らす | pe n to ko ku ba n ne mu i ma bu ta wo te ra su | 笔与黑板,照亮困倦的眼帘 | 17 (17) |
-| 3 | 言葉は熱を帯びて僕らに届く | ko to ba wa ne tsu wo o bi te bo ku ra ni to do ku | 话语带着热度,传到我们心里 | 17 (17) |
-| 4 | 迷わず揺らず　道を前に示す | ma yo wa zu yu ra zu mi chi wo ma e ni shi me su | 不迷惘不动摇,把道路指向前方 | 16 (16) |
-| 5 | その時怖くて曖昧な明日 | so no to ki ko wa ku te a i ma i na a su | 那时令人害怕而又暧昧的明天 | 15 (15) |
-| 6 | 君がいる　向こう見ず | ki mi ga i ru (休止) mu ko u mi zu | 有你在,便奋不顾身 | 10 (10) |
-| 7 | 雪峰先生忘られず | yu ki ho u se n se i wa su ra re zu | 雪峰老师,难以忘怀 | 13 (13) |
-| 8 | そっとそっと僕の手を繋ぐ | so t to so t to bo ku no te wo tsu na gu | 轻轻地轻轻地牵起我的手 | 14 (14) |
-| 9 | 雪峰先生　覚えてる | yu ki ho u se n se i o bo e te ru | 雪峰老师,我一直记得 | 13 (13) |
-| 10 | 勇気の全部君がくれた | yu u ki no ze n bu ki mi ga ku re ta | 全部的勇气都是你给的 | 13 (13) |
-| 11 | チョーク粉肩に乗る雪より静 | cho o ku ko ka ta ni no ru yu ki yo ri shi zu | 粉笔灰落在肩上,比雪更静 | 15 (15) |
-| 12 | 笑顔で褒めて「未来はまだ遠い」 | e ga o de ho me te mi ra i wa ma da to o i | 笑着夸奖我「未来还长着呢」 | 16 (16) |
-| 13 | 何度も真夜中手紙をめくる | na n do mo ma yo na ka te ga mi wo me ku ru | 多少次深夜里翻阅信件 | 15 (15) |
-| 14 | 君が言った言葉心に浮かぶ | ki mi ga i t ta ko to ba ko ko ro ni u ka bu | 你说过的话浮现心头 | 16 (16) |
-| 15 | どんな風に吹かれても | do n na ka ze ni fu ka re te mo | 无论被怎样的风吹打 | 11 (11) |
-| 16 | 逃げずに　その丘の方へ | ni ge zu ni so no o ka no ho e | 也不逃避,向着那座山丘 | 11 (11) |
-| 17 | いつか僕　遠くへ行く | i tsu ka bo ku (休止) to o ku e yu ku | 总有一天我会去向远方 | 11 (11) |
-| 18 | あの教室の光は消えない | a no kyo u shi tsu no hi ka ri wa ki e na i | 那间教室的光不会熄灭 | 15 (15) |
-| 19 | そばに、君の声 | so ba ni (休止) ki mi no ko e | 身旁,是你的声音 | 8 (8) |
-| 20 | 「この道は必ず行ける」 | ko no mi chi wa ka na ra zu i ke ru | 「这条路一定走得通」 | 12 (12) |
-| 21 | 雪峰先生　忘られず | yu ki ho u se n se i wa su ra re zu | 雪峰老师,难以忘怀 | 13 (13) |
-| 22 | 勇気の全部　君がくれた | yu u ki no ze n bu ki mi ga ku re ta | 全部的勇气都是你给的 | 13 (13) |
-| 23 | 困難も　歩き続けながら | ko n na n mo a ru ki tsu zu ke na ga ra | 纵有困难,也一边继续前行 | **14 (13+拆音)** |
-| 24 | 雪峰先生　覚えてる | yu ki ho u se n se i o bo e te ru | 雪峰老师,我一直记得 | 13 (13) |
-| 25 | くれたものは　ずっと心に | ku re ta mo no wa zu t to ko ko ro ni | 你给我的一切,永远在心中 | 13 (13) |
+| 1 | 教壇で僕らに難題を明るく | kyo u da n de bo ku ra ni na n da i wo a ka ru ku | At the lectern, making hard problems bright and clear for us | 18 (18) |
+| 2 | ペンと黒板眠い目蓋を照らす | pe n to ko ku ba n ne mu i ma bu ta wo te ra su | Pen and blackboard light up sleepy eyelids | 17 (17) |
+| 3 | 言葉は熱を帯びて僕らに届く | ko to ba wa ne tsu wo o bi te bo ku ra ni to do ku | Words carry warmth and reach our hearts | 17 (17) |
+| 4 | 迷わず揺らず　道を前に示す | ma yo wa zu yu ra zu mi chi wo ma e ni shi me su | Never lost, never wavering, pointing the way ahead | 16 (16) |
+| 5 | その時怖くて曖昧な明日 | so no to ki ko wa ku te a i ma i na a su | The frightening, uncertain tomorrow of those days | 15 (15) |
+| 6 | 君がいる　向こう見ず | ki mi ga i ru (休止) mu ko u mi zu | With you here, I charge ahead without fear | 10 (10) |
+| 7 | 雪峰先生忘られず | yu ki ho u se n se i wa su ra re zu | Teacher Xuefeng, never to be forgotten | 13 (13) |
+| 8 | そっとそっと僕の手を繋ぐ | so t to so t to bo ku no te wo tsu na gu | Gently, gently taking my hand | 14 (14) |
+| 9 | 雪峰先生　覚えてる | yu ki ho u se n se i o bo e te ru | Teacher Xuefeng, I still remember | 13 (13) |
+| 10 | 勇気の全部君がくれた | yu u ki no ze n bu ki mi ga ku re ta | All of my courage was given by you | 13 (13) |
+| 11 | チョーク粉肩に乗る雪より静 | cho o ku ko ka ta ni no ru yu ki yo ri shi zu | Chalk dust settles on shoulders, quieter than snow | 15 (15) |
+| 12 | 笑顔で褒めて「未来はまだ遠い」 | e ga o de ho me te mi ra i wa ma da to o i | Praising me with a smile: "The future is still far ahead" | 16 (16) |
+| 13 | 何度も真夜中手紙をめくる | na n do mo ma yo na ka te ga mi wo me ku ru | How many midnights spent leafing through letters | 15 (15) |
+| 14 | 君が言った言葉心に浮かぶ | ki mi ga i t ta ko to ba ko ko ro ni u ka bu | The words you said rise up in my heart | 16 (16) |
+| 15 | どんな風に吹かれても | do n na ka ze ni fu ka re te mo | No matter what winds batter me | 11 (11) |
+| 16 | 逃げずに　その丘の方へ | ni ge zu ni so no o ka no ho e | I won't run away — toward that hill | 11 (11) |
+| 17 | いつか僕　遠くへ行く | i tsu ka bo ku (休止) to o ku e yu ku | Someday I will go far away | 11 (11) |
+| 18 | あの教室の光は消えない | a no kyo u shi tsu no hi ka ri wa ki e na i | The light of that classroom will never go out | 15 (15) |
+| 19 | そばに、君の声 | so ba ni (休止) ki mi no ko e | Beside me, your voice | 8 (8) |
+| 20 | 「この道は必ず行ける」 | ko no mi chi wa ka na ra zu i ke ru | "You can surely make it down this road" | 12 (12) |
+| 21 | 雪峰先生　忘られず | yu ki ho u se n se i wa su ra re zu | Teacher Xuefeng, never to be forgotten | 13 (13) |
+| 22 | 勇気の全部　君がくれた | yu u ki no ze n bu ki mi ga ku re ta | All of my courage was given by you | 13 (13) |
+| 23 | 困難も　歩き続けながら | ko n na n mo a ru ki tsu zu ke na ga ra | Even through hardships, walking on | **14 (13 + note split)** |
+| 24 | 雪峰先生　覚えてる | yu ki ho u se n se i o bo e te ru | Teacher Xuefeng, I still remember | 13 (13) |
+| 25 | くれたものは　ずっと心に | ku re ta mo no wa zu t to ko ko ro ni | What you gave me stays in my heart forever | 13 (13) |
 
-## 演唱口径标注(SynthV 输入时生效)
+## Performance conventions (apply when entering into SynthV)
 
-- **行 23 拆音(唯一超配额行)**:v1 旋律该句 8 音符(困難も 之后),v3 需 9 个,
-  新增「け」在 づ 与 な 之间。对照 `refs/anon_version.mp3`,把 づ 或 な 中
-  时值较长者对半拆分给「け」(经验预判优先拆 な)。
-- 行 11「静」按 v1 演唱口径唱 shi-zu(2 mora 截断);行 16「方へ」唱 ho-e(2 mora)。
-- 行 6/17/19 的 (休止) 处留休止符,不填音符。
-- 行 7/21「忘られず」、行 4「揺らず」为文语用法,有意保留。
+- **Line 23 note split (the only over-budget line)**: in the v1 melody this phrase has 8 notes
+  (after 困難も); v3 needs 9, with the new け inserted between づ and な. Referencing
+  `refs/anon_version.mp3`, take whichever of づ or な has the longer duration and split it in
+  half, giving one half to け (empirical guess: splitting な is the first choice).
+- Line 11 静 is sung shi-zu per the v1 performance (truncated to 2 mora); line 16 方へ is sung ho-e (2 mora).
+- At the (休止) marks in lines 6/17/19, leave a rest; do not fill in a note.
+- 忘られず in lines 7/21 and 揺らず in line 4 are literary (classical) usages, retained intentionally.
 
-## 段落结构
+## Song structure
 
-- 1–6 主歌 A / 7–10 副歌 1 / 11–16 主歌 B / 17–20 桥段 / 21–25 副歌 2
+- 1–6 Verse A / 7–10 Chorus 1 / 11–16 Verse B / 17–20 Bridge / 21–25 Chorus 2

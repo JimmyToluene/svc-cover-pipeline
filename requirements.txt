@@ -1,9 +1,11 @@
-# Phase 4 混音/分离/出片依赖(scripts/separate.py, mix.py, make_subs.py, make_release.py)
+# Phase 4 mixing/separation/release dependencies (scripts/separate.py, mix.py, make_subs.py, make_release.py)
 #
-# 注意:装在独立 env(如 conda phase4,python 3.11),不要装进 sovits env——
-# audio-separator 要 librosa>=0.10,与 so-vits-svc 钉的 librosa==0.9.1 冲突。
-# sovits 推理环境的搭建见 docs/phase3_setup_guide.md(不在本文件管理)。
-# make_subs.py / make_release.py 只用标准库 + 系统 ffmpeg。
+# Note: install these in a separate env (e.g. conda phase4, python 3.11), not the
+# sovits env — audio-separator needs librosa>=0.10, which conflicts with the
+# librosa==0.9.1 pinned by so-vits-svc.
+# For setting up the sovits inference environment, see docs/phase3_setup_guide.md
+# (not managed by this file).
+# make_subs.py / make_release.py only need the standard library + system ffmpeg.
 #
 #   conda create -n phase4 python=3.11 -y
 #   conda activate phase4
@@ -16,9 +18,10 @@ soundfile
 numpy
 resampy
 
-# 字幕自动对轴(scripts/auto_line_times.py)。
-# 注意:本 env 的 torch 是 CUDA13,而 ctranslate2 要 CUDA12 的 cublas/cudnn;
-# GPU 跑法:LD_LIBRARY_PATH 指向 sovits env 的 nvidia/{cublas,cudnn}/lib,
-# 或 pip install nvidia-cublas-cu12 nvidia-cudnn-cu12;缺库时脚本自动降级 CPU。
+# Automatic subtitle timing (scripts/auto_line_times.py).
+# Note: this env's torch is built for CUDA 13, while ctranslate2 needs CUDA 12's
+# cublas/cudnn. To run on GPU: point LD_LIBRARY_PATH at the sovits env's
+# nvidia/{cublas,cudnn}/lib, or pip install nvidia-cublas-cu12 nvidia-cudnn-cu12;
+# when the libs are missing the script falls back to CPU automatically.
 faster-whisper
 pykakasi

@@ -1,11 +1,11 @@
-# Phase 3 — so-vits-svc 参数网格盲听对比
+# Phase 3 — so-vits-svc Parameter Grid, Blind-Listening Comparison
 
-备注列由用户盲听后填写;selected.wav = 最终选定版。
+The notes column is filled in by the user after blind listening; selected.wav = the final pick.
 
 
-## 批次 2026-07-04 17:27 — 输入 `vocals_ref_anon_version.wav`,模型 `G_azuma_release.pth`,speaker `AzumaVocal`
+## Batch 2026-07-04 17:27 — input `vocals_ref_anon_version.wav`, model `G_azuma_release.pth`, speaker `AzumaVocal`
 
-| 文件 (vocal/svc_out/) | f0 | trans | cr | 浅扩散 | 耗时/状态 | 盲听备注 |
+| File (vocal/svc_out/) | f0 | trans | cr | Shallow diffusion | Duration/status | Blind-listening notes |
 |---|---|---|---|---|---|---|
 | `vocals_ref_anon_version_f0rmvpe_t+0.wav` | rmvpe | +0 | 0.0 | — | 8s | |
 | `vocals_ref_anon_version_f0rmvpe_t+0_shd100.wav` | rmvpe | +0 | 0.0 | k=100 | 11s | |

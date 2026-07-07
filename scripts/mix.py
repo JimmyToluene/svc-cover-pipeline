@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-"""Phase 4 — 混音(人声链 + 伴奏合轨 + 响度对标)。
+"""Phase 4 — mix (vocal chain + instrumental sum + loudness targeting).
 
-人声链(CLAUDE.md 起始参数,数值全部可调,用户 A/B 定稿):
-  链前规整到 -20 LUFS → 高通 80Hz(两级 12dB/oct)→ 轻压缩(-18dB 阈值 2.5:1)
-  → plate 混响(wet 15%,尾部垫 3s 防截断)
-合轨:人声响度 = 伴奏响度 + vocal-offset(默认 -1.5 LU,即比伴奏低 1.5)
-母带:整体拉到 -14 LUFS(B 站标准),真峰值(4x 过采样)守 -1 dBTP。
+Vocal chain (starting parameters from CLAUDE.md, all values tunable, user A/Bs the final call):
+  normalize to -20 LUFS before the chain → 80Hz highpass (two stages, 12dB/oct)
+  → light compression (-18dB threshold, 2.5:1)
+  → plate reverb (wet 15%, 3s of tail padding to avoid truncation)
+Summing: vocal loudness = instrumental loudness + vocal-offset (default -1.5 LU,
+i.e. 1.5 below the instrumental)
+Mastering: brickwall limiter + iterative make-up gain, converging on -14 LUFS
+(Bilibili standard), true peak (4x oversampled) kept at -1 dBTP.
 
-依赖:pedalboard, pyloudnorm, soundfile, numpy(,resampy 仅采样率不一致时)。
+Dependencies: pedalboard, pyloudnorm, soundfile, numpy (, resampy only when sample rates differ).
 
-路径:默认相对 --project 工程目录(见 project_paths.py)。
+Paths: resolved relative to the --project project directory by default (see project_paths.py).
 
-示例:
-  python scripts/mix.py --inst <project>/inst/伴奏.wav
-  python scripts/mix.py ... --vocal-shift 0.35     # 人声整体延后 0.35s 对拍
-  python scripts/mix.py ... --reverb-wet 0.22 --vocal-offset -1.0   # A/B 微调
+Examples:
+  python scripts/mix.py --inst <project>/inst/instrumental.wav
+  python scripts/mix.py ... --vocal-shift 0.35     # delay the vocal by 0.35s to line up with the beat
+  python scripts/mix.py ... --reverb-wet 0.22 --vocal-offset -1.0   # A/B fine-tuning
 """
 
 import argparse
@@ -24,13 +27,13 @@ from pathlib import Path
 import numpy as np
 import pyloudnorm
 import soundfile as sf
-from pedalboard import Compressor, HighpassFilter, Pedalboard, Reverb
+from pedalboard import Compressor, HighpassFilter, Limiter, Pedalboard, Reverb
 
 from project_paths import add_project_arg, resolve_project
 
 
 def die(msg):
-    print(f"[mix] 错误: {msg}", file=sys.stderr)
+    print(f"[mix] error: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
@@ -50,7 +53,7 @@ def to_stereo(x):
 def lufs(meter, x):
     v = meter.integrated_loudness(x)
     if not np.isfinite(v):
-        die("响度测量得到 -inf(输入基本是静音?)")
+        die("loudness measurement returned -inf (is the input essentially silence?)")
     return v
 
 
@@ -59,24 +62,24 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     add_project_arg(ap)
     ap.add_argument("--vocal", type=Path, default=None,
-                    help="默认 <project>/vocal/svc_out/selected.wav")
-    ap.add_argument("--inst", type=Path, required=True, help="伴奏 wav")
+                    help="default <project>/vocal/svc_out/selected.wav")
+    ap.add_argument("--inst", type=Path, required=True, help="instrumental wav")
     ap.add_argument("--out", type=Path, default=None,
-                    help="默认 <project>/output/final_mix.wav")
+                    help="default <project>/output/final_mix.wav")
     ap.add_argument("--vocal-shift", type=float, default=0.0,
-                    help="人声整体平移秒数,正=延后负=提前(对拍用)")
+                    help="shift the vocal by this many seconds, positive = later, negative = earlier (for beat alignment)")
     ap.add_argument("--vocal-offset", type=float, default=-1.5,
-                    help="人声相对伴奏的响度差(LU),负=人声更小")
-    ap.add_argument("--hp", type=float, default=80.0, help="人声高通 Hz")
+                    help="vocal loudness relative to the instrumental (LU), negative = quieter vocal")
+    ap.add_argument("--hp", type=float, default=80.0, help="vocal highpass in Hz")
     ap.add_argument("--comp-threshold", type=float, default=-18.0,
-                    help="压缩阈值 dB(作用于已规整到 -20 LUFS 的人声,深度可复现)")
+                    help="compressor threshold in dB (applied to the vocal already normalized to -20 LUFS, so compression depth is reproducible)")
     ap.add_argument("--comp-ratio", type=float, default=2.5)
     ap.add_argument("--reverb-wet", type=float, default=0.15)
     ap.add_argument("--reverb-room", type=float, default=0.5,
-                    help="0-1,plate 质感取中等偏小")
+                    help="0-1; keep it medium-small for a plate feel")
     ap.add_argument("--target-lufs", type=float, default=-14.0)
     ap.add_argument("--save-stems", action="store_true",
-                    help="额外导出处理后的人声 stem,便于排查")
+                    help="also export the processed vocal stem, handy for troubleshooting")
     args = ap.parse_args()
     proj = resolve_project(args)
     args.vocal = args.vocal or proj / "vocal" / "svc_out" / "selected.wav"
@@ -84,7 +87,7 @@ def main():
 
     for p in (args.vocal, args.inst):
         if not p.expanduser().is_file():
-            die(f"文件不存在: {p}")
+            die(f"file not found: {p}")
 
     vocal, sr_v = load_audio(args.vocal.expanduser())
     inst, sr_i = load_audio(args.inst.expanduser())
@@ -92,35 +95,39 @@ def main():
         try:
             import resampy
         except ImportError:
-            die(f"人声 {sr_v}Hz 与伴奏 {sr_i}Hz 采样率不同,需要 resampy: pip install resampy")
-        print(f"[mix] 重采样人声 {sr_v} → {sr_i}")
+            die(f"vocal is {sr_v}Hz but instrumental is {sr_i}Hz; resampy is needed: pip install resampy")
+        print(f"[mix] resampling vocal {sr_v} → {sr_i}")
         vocal = resampy.resample(vocal.T, sr_v, sr_i).T.astype(np.float32)
     sr = sr_i
 
-    # 人声平移
+    # Vocal shift
     shift = int(round(args.vocal_shift * sr))
     if shift > 0:
         vocal = np.vstack([np.zeros((shift, vocal.shape[1]), dtype=np.float32), vocal])
     elif shift < 0:
         if -shift >= len(vocal):
-            die("--vocal-shift 提前量超过人声长度")
+            die("--vocal-shift moves the vocal earlier than its own length")
         vocal = vocal[-shift:]
 
-    # 先统一立体声再做一切响度测量:BS.1770 对双声道求和,单声道升立体声 +3 LU,
-    # 后升会让人声比目标偏热 3dB
+    # Convert everything to stereo before any loudness measurement: BS.1770 sums
+    # both channels, so upmixing mono to stereo adds +3 LU — doing it later would
+    # leave the vocal 3dB hotter than the target
     vocal, inst = to_stereo(vocal), to_stereo(inst)
     meter = pyloudnorm.Meter(sr)
 
-    # 链前把人声规整到固定电平:压缩深度只取决于阈值参数,不取决于 SVC 输出的碰巧电平
+    # Normalize the vocal to a fixed level before the chain: compression depth then
+    # depends only on the threshold parameter, not on whatever level the SVC happened to output
     PRE_CHAIN_LUFS = -20.0
     l_raw = lufs(meter, vocal)
     vocal *= 10 ** ((PRE_CHAIN_LUFS - l_raw) / 20)
 
-    # 尾部垫静音,给混响衰减留空间(pedalboard 离线渲染输出长度=输入长度,会截尾)
+    # Pad the tail with silence so the reverb has room to decay (pedalboard's
+    # offline render output length = input length, which would clip the tail)
     TAIL_S = 3.0
     vocal = np.vstack([vocal, np.zeros((int(TAIL_S * sr), 2), dtype=np.float32)])
 
-    # 人声处理链(高通两级串联 = 12dB/oct,单级只有 6dB/oct 压不住低频)
+    # Vocal processing chain (two cascaded highpasses = 12dB/oct; a single stage
+    # at 6dB/oct can't tame the lows)
     chain = Pedalboard([
         HighpassFilter(cutoff_frequency_hz=args.hp),
         HighpassFilter(cutoff_frequency_hz=args.hp),
@@ -130,50 +137,63 @@ def main():
                wet_level=args.reverb_wet, dry_level=1.0 - args.reverb_wet,
                width=1.0),
     ])
-    vocal = chain(vocal.T, sr).T  # pedalboard 接口是 (ch, frames)
+    vocal = chain(vocal.T, sr).T  # pedalboard's interface is (ch, frames)
 
-    # 响度对齐:人声 = 伴奏 + offset
+    # Loudness alignment: vocal = instrumental + offset
     l_inst, l_vocal = lufs(meter, inst), lufs(meter, vocal)
     gain_db = (l_inst + args.vocal_offset) - l_vocal
     vocal *= 10 ** (gain_db / 20)
-    print(f"[mix] 伴奏 {l_inst:.1f} LUFS,人声链后 {l_vocal:.1f} LUFS,"
-          f"人声增益 {gain_db:+.1f} dB(目标差 {args.vocal_offset:+.1f} LU)")
+    print(f"[mix] instrumental {l_inst:.1f} LUFS, vocal after chain {l_vocal:.1f} LUFS, "
+          f"vocal gain {gain_db:+.1f} dB (target offset {args.vocal_offset:+.1f} LU)")
 
-    # 合轨
+    # Sum the tracks
     n = max(len(vocal), len(inst))
     pad = lambda x: np.vstack([x, np.zeros((n - len(x), 2), dtype=np.float32)])
     mix = pad(vocal) + pad(inst)
 
-    # 母带:拉到目标响度;真峰值(4x 过采样估计)超 -1dB 才整体回拉
-    # (透明处理,不用 pedalboard.Limiter——它带自动增益补偿,会把响度顶回去)
+    # Mastering: brickwall limiter squashes transient peaks + iterative make-up gain
+    # converges on the target loudness. pedalboard.Limiter (JUCE) has automatic gain
+    # compensation with a fixed 0 dBFS output ceiling, so the recipe is: after
+    # limiting, pull everything back by CEIL_DB for true-peak headroom, and if
+    # loudness dropped, add gain and limit again.
     def true_peak_db(x):
         try:
             import resampy
-            y = resampy.resample(x.T, sr, sr * 4).T  # 采样间峰值近似
+            y = resampy.resample(x.T, sr, sr * 4).T  # approximate inter-sample peaks
         except ImportError:
             y = x
         return 20 * np.log10(max(np.abs(y).max(), 1e-9))
 
+    CEIL_DB = -1.2   # sample-peak ceiling, leaving 0.2dB for 4x-oversampled inter-sample peaks
+    limiter = Pedalboard([Limiter(threshold_db=-1.0, release_ms=100)])
     l_mix = lufs(meter, mix)
-    mix *= 10 ** ((args.target_lufs - l_mix) / 20)
+    pre = mix * 10 ** ((args.target_lufs - l_mix) / 20)
+    for i in range(3):
+        mix = limiter(pre.T, sr).T * 10 ** (CEIL_DB / 20)
+        err = args.target_lufs - lufs(meter, mix)
+        if abs(err) < 0.3:
+            break
+        pre *= 10 ** (err / 20)   # add back however much loudness the limiter ate, before re-limiting
+    gr = 20 * np.log10(max(np.abs(pre).max(), 1e-9)) - CEIL_DB
+    if gr > 6:
+        print(f"[mix] warning: the limiter is shaving about {gr:.0f} dB off the peaks, "
+              "transients may sound noticeably dulled; consider lowering --target-lufs", file=sys.stderr)
     tp = true_peak_db(mix)
-    if tp > -1.0:
+    if tp > -1.0:   # safety net: inter-sample peaks still over, pull back slightly
         mix *= 10 ** ((-1.0 - tp) / 20)
-        print(f"[mix] 真峰值 {tp:.1f} dBTP 超限,整体回拉 {-1.0 - tp:.1f} dB"
-              "(最终响度会略低于目标,属正常)")
     l_final = lufs(meter, mix)
-    print(f"[mix] 母带前 {l_mix:.1f} LUFS → 最终 {l_final:.1f} LUFS,"
-          f"真峰值 {true_peak_db(mix):.1f} dBTP(目标 {args.target_lufs} LUFS / ≤-1)")
+    print(f"[mix] pre-master {l_mix:.1f} LUFS → final {l_final:.1f} LUFS, "
+          f"true peak {true_peak_db(mix):.1f} dBTP (target {args.target_lufs} LUFS / ≤-1)")
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     sf.write(args.out, mix, sr, subtype="PCM_24")
-    print(f"[mix] 完成 → {args.out}")
+    print(f"[mix] done → {args.out}")
     if args.save_stems:
         stem_path = args.out.with_name(args.out.stem + "_vocal_stem.wav")
         sf.write(stem_path, pad(vocal), sr, subtype="PCM_24")
-        print(f"[mix] 人声 stem → {stem_path}")
-    print(f"[mix] 下一步:与 {proj.name}/refs/ 下的参照版做 A/B"
-          "(人声电平/混响量/整体响度)")
+        print(f"[mix] vocal stem → {stem_path}")
+    print(f"[mix] next step: A/B against the reference version under {proj.name}/refs/"
+          " (vocal level / reverb amount / overall loudness)")
 
 
 if __name__ == "__main__":

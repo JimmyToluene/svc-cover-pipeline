@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
-"""Phase 4 — 伴奏分离兜底(audio-separator 封装)。
+"""Phase 4 — instrumental separation fallback (audio-separator wrapper).
 
-伴奏获取优先级(CLAUDE.md):(1) 官方伴奏 >(2) 从参照翻唱版分离(本脚本默认;
-若其人声是 SVC 干声+混响,分离难度低于真人演唱)>(3) 从原版音频分离。
+Instrumental sourcing priority (see CLAUDE.md): (1) official instrumental >
+(2) separate from the reference cover version (this script's default; when its
+vocals are an SVC dry vocal plus reverb, separation is easier than for a real
+human performance) > (3) separate from the original recording.
 
-默认用 BS-Roformer(当前 SDR 最高的通用分离模型),可选对伴奏再跑一遍
-DeEcho-DeReverb 去除人声混响残留(--dereverb,伴奏里听得到"人声尾巴"时用)。
+Uses BS-Roformer by default (currently the highest-SDR general-purpose
+separation model). Optionally run DeEcho-DeReverb on the instrumental
+afterwards to strip residual vocal reverb (--dereverb, for when you can hear a
+"vocal tail" in the instrumental).
 
-依赖:audio-separator[gpu](建议装在独立 phase4 env,librosa 版本与 sovits env 冲突)。
-模型权重首次运行自动下载到 --model-dir。
+Dependencies: audio-separator[gpu] (install it in a separate phase4 env; its
+librosa requirement conflicts with the sovits env). Model weights are
+downloaded automatically to --model-dir on first run.
 
-默认输入:<project>/refs/ 下唯一的音频文件(mp3/wav/flac/m4a),多个时用 --input 指定。
+Default input: the single audio file (mp3/wav/flac/m4a) under <project>/refs/;
+use --input when there is more than one.
 
-示例:
-  python scripts/separate.py                      # 参照版 → <project>/inst/
-  python scripts/separate.py --dereverb           # 伴奏残留人声混响时
-  python scripts/separate.py --input 中文原版.mp3  # 兜底的兜底
+Examples:
+  python scripts/separate.py                        # reference version → <project>/inst/
+  python scripts/separate.py --dereverb             # when the instrumental has residual vocal reverb
+  python scripts/separate.py --input original.mp3   # fallback of the fallback
 """
 
 import argparse
@@ -31,15 +37,16 @@ DEREVERB_MODEL = "UVR-DeEcho-DeReverb.pth"
 
 
 def die(msg):
-    print(f"[separate] 错误: {msg}", file=sys.stderr)
+    print(f"[separate] error: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
 def pick(paths, *keywords, strip_prefix=""):
-    """按关键词(不区分大小写)从输出列表选文件。
+    """Pick a file from the output list by keywords (case-insensitive).
 
-    strip_prefix 用来剥掉输出名里的输入文件名前缀——输入若本身叫
-    xxx_instrumental.mp3,不剥前缀会让关键词误命中。"""
+    strip_prefix removes the input filename prefix from the output name — if
+    the input itself is called xxx_instrumental.mp3, the keywords would match
+    spuriously without stripping it."""
     for p in paths:
         name = Path(p).name
         if strip_prefix and name.startswith(strip_prefix):
@@ -57,8 +64,8 @@ def default_input(proj: Path) -> Path:
     if len(auds) == 1:
         return auds[0]
     if not auds:
-        die(f"{refs} 下没有音频文件,用 --input 指定分离输入")
-    die(f"{refs} 下有多个音频 {[p.name for p in auds]},用 --input 指定")
+        die(f"no audio files under {refs}; specify the separation input with --input")
+    die(f"multiple audio files under {refs}: {[p.name for p in auds]}; specify one with --input")
 
 
 def main():
@@ -66,15 +73,15 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     add_project_arg(ap)
     ap.add_argument("--input", type=Path, default=None,
-                    help="默认 <project>/refs/ 下唯一的音频文件")
+                    help="default: the single audio file under <project>/refs/")
     ap.add_argument("--outdir", type=Path, default=None,
-                    help="默认 <project>/inst")
+                    help="default: <project>/inst")
     ap.add_argument("--model", default=SEP_MODEL)
     ap.add_argument("--dereverb", action="store_true",
-                    help="对分离出的伴奏再跑 DeEcho-DeReverb,去人声混响残留")
+                    help="run DeEcho-DeReverb on the separated instrumental to strip residual vocal reverb")
     ap.add_argument("--model-dir", type=Path,
                     default=Path.home() / ".cache" / "audio-separator-models",
-                    help="模型权重缓存目录(首次自动下载)")
+                    help="model weight cache directory (auto-downloaded on first run)")
     ap.add_argument("--device", default="cuda", choices=["cuda", "cpu"])
     args = ap.parse_args()
     proj = resolve_project(args)
@@ -82,14 +89,14 @@ def main():
 
     args.input = (args.input or default_input(proj)).expanduser()
     if not args.input.is_file():
-        die(f"输入不存在: {args.input}")
+        die(f"input not found: {args.input}")
     if args.device == "cpu":
-        os.environ["CUDA_VISIBLE_DEVICES"] = ""  # audio-separator 无显式开关,靠这个禁 GPU
+        os.environ["CUDA_VISIBLE_DEVICES"] = ""  # audio-separator has no explicit switch; this is how we disable the GPU
 
     try:
         from audio_separator.separator import Separator
     except ImportError:
-        die("缺 audio-separator,先在 phase4 env 里: pip install 'audio-separator[gpu]'")
+        die("audio-separator missing; in the phase4 env run: pip install 'audio-separator[gpu]'")
 
     args.outdir.mkdir(parents=True, exist_ok=True)
     stem = args.input.stem
@@ -97,42 +104,43 @@ def main():
     sep = Separator(output_dir=str(args.outdir),
                     model_file_dir=str(args.model_dir),
                     output_format="wav")
-    print(f"[separate] 加载分离模型 {args.model}(首次运行会自动下载)")
+    print(f"[separate] loading separation model {args.model} (downloads automatically on first run)")
     sep.load_model(model_filename=args.model)
-    print(f"[separate] 分离 {args.input.name} ...")
+    print(f"[separate] separating {args.input.name} ...")
     outputs = [args.outdir / Path(p).name for p in sep.separate(str(args.input))]
-    print(f"[separate] 分离输出: {[p.name for p in outputs]}")
+    print(f"[separate] separation outputs: {[p.name for p in outputs]}")
 
     inst = (pick(outputs, "instrumental", strip_prefix=stem)
             or pick(outputs, "no vocals", strip_prefix=stem))
     vocals = pick(outputs, "(vocals", strip_prefix=stem)
     if inst is None:
-        die(f"没找到 instrumental 输出,实际输出: {[p.name for p in outputs]}")
+        die(f"no instrumental output found; actual outputs: {[p.name for p in outputs]}")
 
     inst_final = args.outdir / f"inst_from_{stem}.wav"
     shutil.move(str(inst), inst_final)
     if vocals:
-        # 分离出的人声留作时间轴参照(字幕对轴用),不进混音
+        # keep the separated vocals as a timing reference (for subtitle alignment);
+        # they don't go into the mix
         shutil.move(str(vocals), args.outdir / f"vocals_ref_{stem}.wav")
 
     if args.dereverb:
-        print(f"[separate] 去混响二遍: {DEREVERB_MODEL}")
+        print(f"[separate] dereverb second pass: {DEREVERB_MODEL}")
         sep.load_model(model_filename=DEREVERB_MODEL)
         outs2 = [args.outdir / Path(p).name for p in sep.separate(str(inst_final))]
-        print(f"[separate] 去混响输出: {[p.name for p in outs2]}")
+        print(f"[separate] dereverb outputs: {[p.name for p in outs2]}")
         dry = (pick(outs2, "no reverb", strip_prefix=inst_final.stem)
                or pick(outs2, "noreverb", strip_prefix=inst_final.stem))
         if dry is None:
-            die(f"没找到 No Reverb 输出,实际输出: {[p.name for p in outs2]}")
+            die(f"no 'No Reverb' output found; actual outputs: {[p.name for p in outs2]}")
         dry_final = args.outdir / f"inst_from_{stem}_dereverb.wav"
         shutil.move(str(dry), dry_final)
-        for p in outs2:  # 丢弃 Reverb 残渣
+        for p in outs2:  # discard the reverb-only leftovers
             if p.exists() and p != dry:
                 p.unlink()
-        print(f"[separate] 完成 → {dry_final}(与 {inst_final.name} A/B 后选一个)")
+        print(f"[separate] done → {dry_final} (A/B against {inst_final.name} and keep one)")
     else:
-        print(f"[separate] 完成 → {inst_final}")
-        print("[separate] 若伴奏里能听到人声混响残留,重跑加 --dereverb")
+        print(f"[separate] done → {inst_final}")
+        print("[separate] if you can hear residual vocal reverb in the instrumental, rerun with --dereverb")
 
 
 if __name__ == "__main__":

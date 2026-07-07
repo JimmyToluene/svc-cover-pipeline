@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Phase 4 — 出片:静态封面 + 成品音频 + 字幕 → release.mp4(ffmpeg 一条命令)。
+"""Phase 4 — release: static cover + final audio + subtitles → release.mp4 (single ffmpeg command).
 
-默认把 .ass 烧进画面(B 站兼容最稳);--soft 改为 mkv 软字幕(保留样式,体积小,
-但 B 站会转码,烧录仍是首选)。
+By default the .ass subtitles are burned into the video (most reliable for
+Bilibili); --soft switches to mkv soft subtitles (keeps the styling, smaller
+file, but Bilibili re-encodes anyway, so burning in is still the first choice).
 
-示例:
+Examples:
   python scripts/make_release.py --cover refs/cover.png
-  python scripts/make_release.py --cover refs/cover.png --no-subs   # 无字幕版
+  python scripts/make_release.py --cover refs/cover.png --no-subs   # no-subtitles version
 """
 
 import argparse
@@ -19,12 +20,12 @@ from project_paths import add_project_arg, resolve_project
 
 
 def die(msg):
-    print(f"[release] 错误: {msg}", file=sys.stderr)
+    print(f"[release] error: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
 def esc_filter_path(p: Path) -> str:
-    # ffmpeg filter 参数里的路径转义(':' 和 "'" 是分隔符)
+    # escape the path for ffmpeg filter arguments (':' and "'" are delimiters)
     return str(p).replace("\\", "/").replace(":", "\\:").replace("'", "\\'")
 
 
@@ -34,7 +35,7 @@ def audio_duration(path: Path) -> float:
     try:
         return float(r.stdout.strip())
     except ValueError:
-        die(f"ffprobe 读不到音频时长: {path}\n{r.stderr[-500:]}")
+        die(f"ffprobe could not read the audio duration: {path}\n{r.stderr[-500:]}")
 
 
 def main():
@@ -42,14 +43,15 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     add_project_arg(ap)
     ap.add_argument("--audio", type=Path, default=None,
-                    help="默认 <project>/output/final_mix.wav")
-    ap.add_argument("--cover", type=Path, required=True, help="静态封面图(png/jpg)")
+                    help="default: <project>/output/final_mix.wav")
+    ap.add_argument("--cover", type=Path, required=True, help="static cover image (png/jpg)")
     ap.add_argument("--subs", type=Path, default=None,
-                    help="默认 <project>/output/subs.ass")
+                    help="default: <project>/output/subs.ass")
     ap.add_argument("--no-subs", action="store_true")
-    ap.add_argument("--soft", action="store_true", help="软字幕 mkv(默认烧录 mp4)")
+    ap.add_argument("--soft", action="store_true",
+                    help="soft subtitles in mkv (default: burn into mp4)")
     ap.add_argument("--out", type=Path, default=None,
-                    help="默认 <project>/output/release.mp4(--soft 时 .mkv)")
+                    help="default: <project>/output/release.mp4 (.mkv with --soft)")
     ap.add_argument("--crf", type=int, default=20)
     ap.add_argument("--fps", type=int, default=24)
     args = ap.parse_args()
@@ -59,15 +61,15 @@ def main():
 
     for tool in ("ffmpeg", "ffprobe"):
         if shutil.which(tool) is None:
-            die(f"找不到 {tool}(sovits env 里有:PATH=~/miniforge3/envs/sovits/bin:$PATH)")
+            die(f"{tool} not found (the sovits env has it: PATH=~/miniforge3/envs/sovits/bin:$PATH)")
     args.audio, args.cover, args.subs = (p.expanduser() for p in
                                          (args.audio, args.cover, args.subs))
     for p in (args.audio, args.cover):
         if not p.is_file():
-            die(f"文件不存在: {p}")
+            die(f"file not found: {p}")
     use_subs = not args.no_subs
     if use_subs and not args.subs.is_file():
-        die(f"字幕不存在: {args.subs}(先跑 make_subs.py,或加 --no-subs)")
+        die(f"subtitles not found: {args.subs} (run make_subs.py first, or pass --no-subs)")
 
     out = args.out or (proj / "output" / ("release.mkv" if args.soft else "release.mp4"))
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -88,18 +90,20 @@ def main():
             "-c:a", "aac", "-b:a", "320k"]
     if use_subs and args.soft:
         cmd += ["-c:s", "ass", "-map", "0:v", "-map", "1:a", "-map", "2:s"]
-    # 用 -t 按音频时长硬截断:-shortest 会因混流缓冲让静止画面拖过音频结尾几秒,
-    # 而修它的 -fflags +shortest 在 ffmpeg 8 上已不可用
+    # Hard-cut with -t to the audio duration: -shortest lets the still image run
+    # a few seconds past the end of the audio due to muxer buffering, and the
+    # fix for that (-fflags +shortest) is no longer available in ffmpeg 8
     dur = audio_duration(args.audio)
     cmd += ["-t", f"{dur:.3f}", "-movflags", "+faststart", str(out)]
 
     print("[release]", " ".join(cmd))
     r = subprocess.run(cmd)
     if r.returncode != 0:
-        die(f"ffmpeg 失败 (exit={r.returncode})")
+        die(f"ffmpeg failed (exit={r.returncode})")
     size_mb = out.stat().st_size / 1e6
-    print(f"[release] 完成 → {out}({size_mb:.1f} MB)")
-    print("[release] 发布前核对:B 站 AI 生成内容标注 + 原填词作者署名(不可协商)")
+    print(f"[release] done → {out} ({size_mb:.1f} MB)")
+    print("[release] before publishing, verify: Bilibili AI-generated-content label "
+          "+ credit to the original lyricist (non-negotiable)")
 
 
 if __name__ == "__main__":

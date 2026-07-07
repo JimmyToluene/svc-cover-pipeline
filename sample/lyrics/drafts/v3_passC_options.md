@@ -1,69 +1,70 @@
-# Pass C — 表达提升备选(逐条采纳,v2 为基线)
+# Pass C — expression-upgrade candidates (adopt item by item; v2 is the baseline)
 
-> 规则:一句一个备选,mora 与配额严格相等(已逐条核对),不整段重写。
-> 基调不变(感怀师恩抒情)。你逐条回复「采纳 / 不采纳」,
-> 采纳结果合成 v3;全部不采纳则 v2 即为定稿基线。
-> (若想要「莲式」口语化分支版,另说,不混入主线。)
+> Rules: one candidate per line, mora strictly equal to the budget (verified item by item), no wholesale rewrites.
+> Tone unchanged (lyrical remembrance of a teacher's kindness). Reply "adopt / reject" per item;
+> adopted results are merged into v3. If all are rejected, v2 becomes the final baseline.
+> (If you want a "Lian-style" colloquial branch version, that is a separate discussion — it will not be mixed into the mainline.)
 
-共 5 条。未列出的行(1/4/5/6/7/8/9/10/11/13/14/16/17/19/20/21/22/23/24/25)
-判断为已达意且有味,Pass C 不动。
+5 candidates in total. Lines not listed (1/4/5/6/7/8/9/10/11/13/14/16/17/19/20/21/22/23/24/25)
+are judged to already read well and carry flavor; Pass C leaves them alone.
 
-## 候选 1 — 行 2(配额 17)
+## Candidate 1 — line 2 (budget 17)
 
-| | 日语 | 罗马音 | 中文回译 | mora |
+| | Japanese | Romaji | English gloss | mora |
 |---|---|---|---|---|
-| v2 | ペンと黒板1つ目蓋を照らす | pe n to ko ku ba n hi to tsu ma bu ta wo te ra su | 笔与黑板,照亮一双眼帘 | 17 ✓ |
-| 备选 | ペンと黒板眠い目蓋を照らす | pe n to ko ku ba n ne mu i ma bu ta wo te ra su | 笔与黑板,照亮困倦的眼帘 | 17 ✓ |
+| v2 | ペンと黒板1つ目蓋を照らす | pe n to ko ku ba n hi to tsu ma bu ta wo te ra su | Pen and blackboard light up a pair of eyelids | 17 ✓ |
+| Candidate | ペンと黒板眠い目蓋を照らす | pe n to ko ku ba n ne mu i ma bu ta wo te ra su | Pen and blackboard light up sleepy eyelids | 17 ✓ |
 
-理由:「1つ目蓋」(一只眼睑)数量词用得奇怪,意象不通。「眠い目蓋」
-= 课堂上犯困的眼皮被他点亮,画面具体,且顺带消掉了行 2 的
-hitotsu/ittsu 唱法分歧(此处变为 ne-mu-i,3 mora 不变)。
+Reasoning: the counter in 1つ目蓋 ("one eyelid") is odd and the image does not work. 眠い目蓋
+= drowsy classroom eyelids lit up by him — a concrete image, and it also eliminates line 2's
+hitotsu/ittsu pronunciation ambiguity (this spot becomes ne-mu-i, still 3 mora).
 
-## 候选 2 — 行 3(配额 17)
+## Candidate 2 — line 3 (budget 17)
 
-| | 日语 | 罗马音 | 中文回译 | mora |
+| | Japanese | Romaji | English gloss | mora |
 |---|---|---|---|---|
-| v2 | 言葉が生温い口の中に出る | ko to ba ga na ma nu ru i ku chi no na ka ni de ru | 话语自微温的口中涌出 | 17 ✓ |
-| 备选 | 言葉は熱を帯びて僕らに届く | ko to ba wa ne tsu wo o bi te bo ku ra ni to do ku | 话语带着热度,传到我们心里 | 17 ✓ |
+| v2 | 言葉が生温い口の中に出る | ko to ba ga na ma nu ru i ku chi no na ka ni de ru | Words well up from a lukewarm mouth | 17 ✓ |
+| Candidate | 言葉は熱を帯びて僕らに届く | ko to ba wa ne tsu wo o bi te bo ku ra ni to do ku | Words carry warmth and reach our hearts | 17 ✓ |
 
-理由:「生温い口の中」(温吞的口腔内)意象黏腻,是全篇最别扭的一句。
-备选保留"话语有温度"的核心,方向从"在口中"转为"抵达我们",
-与行 1 的 僕らに 呼应。改动幅度最大的一条,不喜欢可以不采。
+Reasoning: 生温い口の中 ("inside a lukewarm mouth") is a sticky, awkward image — the clumsiest line in the piece.
+The candidate keeps the core idea of "words carrying warmth" but shifts the direction from "inside the mouth"
+to "reaching us", echoing 僕らに in line 1. This is the largest change of the batch; feel free to reject it.
 
-## 候选 3 — 行 12(配额 16)
+## Candidate 3 — line 12 (budget 16)
 
-| | 日语 | 罗马音 | 中文回译 | mora |
+| | Japanese | Romaji | English gloss | mora |
 |---|---|---|---|---|
-| v2 | 笑顔で褒めて「未来はまた遠い」 | e ga o de ho me te mi ra i wa ma ta to o i | 笑着夸奖我「未来又很遥远」 | 16 ✓ |
-| 备选 | 笑顔で褒めて「未来はまだ遠い」 | e ga o de ho me te mi ra i wa ma da to o i | 笑着夸奖我「未来还长着呢」 | 16 ✓ |
+| v2 | 笑顔で褒めて「未来はまた遠い」 | e ga o de ho me te mi ra i wa ma ta to o i | Praising me with a smile: "The future is again far away" | 16 ✓ |
+| Candidate | 笑顔で褒めて「未来はまだ遠い」 | e ga o de ho me te mi ra i wa ma da to o i | Praising me with a smile: "The future is still far ahead" | 16 ✓ |
 
-理由:また(又/再)在这里语义不通,大概率是 v1 笔误,应为
-まだ(还)——"未来还很远,慢慢来"才是夸奖后接的话。
-一字之差,严格说够得上 Pass A 级别,补在这里。
+Reasoning: また ("again") makes no sense here and is most likely a v1 typo for
+まだ ("still") — "the future is still far off, take your time" is what would follow praise.
+A one-character fix; strictly speaking it rises to Pass A level, patched in here.
 
-## 候选 4 — 行 15(配额 11)
+## Candidate 4 — line 15 (budget 11)
 
-| | 日语 | 罗马音 | 中文回译 | mora |
+| | Japanese | Romaji | English gloss | mora |
 |---|---|---|---|---|
-| v2 | その後風に吹かれても | so no go ka ze ni fu ka re te mo | 此后即便被风吹打 | 11 ✓ |
-| 备选 | どんな風に吹かれても | do n na ka ze ni fu ka re te mo | 无论被怎样的风吹打 | 11 ✓ |
+| v2 | その後風に吹かれても | so no go ka ze ni fu ka re te mo | Even battered by the winds thereafter | 11 ✓ |
+| Candidate | どんな風に吹かれても | do n na ka ze ni fu ka re te mo | No matter what winds batter me | 11 ✓ |
 
-理由:その後(其后)是报告腔的时间词,唱出来平。どんな風でも
-把"风"从时间叙述升级为逆境比喻,力度更强,和下句 逃げずに 衔接更顺。
+Reasoning: その後 ("after that") is a report-style time marker and sings flat. どんな風でも
+elevates the "wind" from time narration to a metaphor for adversity — stronger, and it connects more smoothly to 逃げずに in the next line.
 
-## 候选 5 — 行 18(配额 15)
+## Candidate 5 — line 18 (budget 15)
 
-| | 日语 | 罗马音 | 中文回译 | mora |
+| | Japanese | Romaji | English gloss | mora |
 |---|---|---|---|---|
-| v2 | あの教室の光を覚える | a no kyo u shi tsu no hi ka ri wo o bo e ru | 仍记得那间教室的光 | 15 ✓ |
-| 备选 | あの教室の光は消えない | a no kyo u shi tsu no hi ka ri wa ki e na i | 那间教室的光不会熄灭 | 15 ✓ |
+| v2 | あの教室の光を覚える | a no kyo u shi tsu no hi ka ri wo o bo e ru | Still remembering the light of that classroom | 15 ✓ |
+| Candidate | あの教室の光は消えない | a no kyo u shi tsu no hi ka ri wa ki e na i | The light of that classroom will never go out | 15 ✓ |
 
-理由:覚える 表"记住/习得",此处语法上应为 覚えてる,mora 不够;
-与其修补,不如换成「光は消えない」——不依赖"我记得"的陈述,
-光自己不灭,意象更强。且句尾从闭口 ru 变开口 na-i,长音听感更稳。
+Reasoning: 覚える means "memorize/learn"; grammatically this should be 覚えてる, which does not fit the mora count.
+Rather than patch it, swap in 光は消えない — the light stays lit on its own, without leaning on an
+"I remember" statement, a stronger image. And the line ending shifts from the closed ru to the open na-i,
+steadier on the sustained note.
 
-## 回复格式
+## Reply format
 
-按编号回复即可,如:`1 采纳,2 不采,3 采纳,4 采纳,5 采纳`。
-收到后我合成 v3(含全文三栏 + 与 v2 的 diff),你确认后出
-`lyrics/final.md` + `lyrics/synthv_input.txt`,Phase 1 完成。
+Reply by number, e.g.: `1 adopt, 2 reject, 3 adopt, 4 adopt, 5 adopt`.
+Once received, I will merge v3 (full three-column table + diff against v2); after you confirm,
+`lyrics/final.md` + `lyrics/synthv_input.txt` are produced and Phase 1 is complete.
