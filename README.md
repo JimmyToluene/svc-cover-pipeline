@@ -11,16 +11,6 @@ takes `--project <dir>` (default: the `$SVC_PROJECT` environment variable),
 and resolves all of its default paths inside that directory. `sample/` is a
 complete example project taken from a real production.
 
-## Contents
-
-- [Showcase](#showcase)
-- [Layout](#layout)
-- [Requirements](#requirements)
-- [Workflow](#workflow)
-- [Example projects](#example-projects)
-- [Attribution and usage](#attribution-and-usage)
-- [License](#license)
-
 ## Showcase
 
 <div align="center">
@@ -37,10 +27,23 @@ complete example project taken from a real production.
     <a href="https://www.bilibili.com/video/BV14kMh6WEH9/">
       <img src="https://img.shields.io/badge/Bilibili-%E2%96%B6%EF%B8%8E%20Watch-00A1D6?style=for-the-badge&logo=bilibili&logoColor=white"
            alt="Watch on Bilibili"></a>
+    &nbsp;
+    <a href="https://www.youtube.com/watch?v=Qq7K7ZKNZag">
+      <img src="https://img.shields.io/badge/YouTube-%E2%96%B6%EF%B8%8E%20Watch-FF0000?style=for-the-badge&logo=youtube&logoColor=white"
+           alt="Watch on YouTube"></a>
   </p>
-  <sub>Published with Bilibili's AI-generated-content label ·
+  <sub>Published with an AI-generated-content label ·
   project files in <a href="southeast_ascetic_mountain_funk/"><code>southeast_ascetic_mountain_funk/</code></a></sub>
 </div>
+
+## Contents
+
+- [Layout](#layout)
+- [Requirements](#requirements)
+- [Workflow](#workflow)
+- [Example projects](#example-projects)
+- [Attribution and usage](#attribution-and-usage)
+- [License](#license)
 
 ## Layout
 
