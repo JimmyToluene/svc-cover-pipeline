@@ -13,11 +13,11 @@ complete example from a real production.
 <div align="center">
   <a href="https://www.bilibili.com/video/BV14kMh6WEH9/">
     <img src="southeast_ascetic_mountain_funk/refs/Cover.png" width="680"
-         alt="Southeast Yukiren Mountain Funk — cover art, links to the Bilibili video">
+         alt="Southeast Yukiren Mountain Funk: cover art, links to the Bilibili video">
   </a>
   <p>
     <b>《东南苦行山》但是冬雪莲抱起了贝斯｜东南雪莲山 Funk</b><br>
-    <sub>A funk cover of "Dongnan Shan" in Higashi Yukiren's voice —
+    <sub>A funk cover of "Dongnan Shan" in Higashi Yukiren's voice:
     separation, SVC, mix, and release video all produced with this pipeline.</sub>
   </p>
   <p>
@@ -46,7 +46,7 @@ complete example from a real production.
 
 ```
 SVC-Cover-Pipeline/
-├── scripts/                  # generic pipeline — song-agnostic
+├── scripts/                  # generic pipeline: song-agnostic
 │   ├── project_paths.py      #   shared --project resolution
 │   ├── new_project.py        #   scaffold a new song project
 │   ├── separate.py           #   split reference audio into instrumental + vocals (BS-Roformer)
@@ -57,8 +57,8 @@ SVC-Cover-Pipeline/
 │   ├── make_release.py       #   static-cover release video
 │   └── make_release_v2.py    #   two-image release video with animated waveform
 ├── requirements.txt
-├── sample/                   # example project — see "Example projects" below
-├── southeast_ascetic_mountain_funk/   # released cover — see "Showcase" above
+├── sample/                   # example project: see "Example projects" below
+├── southeast_ascetic_mountain_funk/   # released cover: see "Showcase" above
 └── <project>/                # one directory per song, created by new_project.py
     ├── refs/                 #   reference audio, mora budget, subtitle timing
     ├── lyrics/               #   drafts and final.md (lyrics / romaji / gloss)
@@ -115,26 +115,26 @@ Two real productions are included as examples. Audio, video, and model weights
 are excluded (see `.gitignore`); only the text and image assets that document
 the process are kept.
 
-### `sample/` — "Nian Zhang Shi" (Japanese adaptation)
+### `sample/`: "Nian Zhang Shi" (Japanese adaptation)
 
 A Japanese-language cover with adapted lyrics, converted to the voice of
 Higashi Yukiren. The fullest example of the lyric-writing phases:
 
-- `lyrics/` — draft revisions (v1 → v3) and `final.md`, a
+- `lyrics/`: draft revisions (v1 → v3) and `final.md`, a
   lyrics / romaji / English-gloss table with per-line mora counts
-- `refs/` — the mora budget and subtitle-timing TSVs, cover art
-- `docs/` — phase-by-phase working notes: mora verification, SynthV
-  tuning notes, the SVC parameter-grid comparison, and mixing/release notes
+- `refs/`: the mora budget and subtitle-timing TSVs, cover art
+- `docs/`: phase-by-phase working notes covering mora verification, SynthV
+  tuning, the SVC parameter-grid comparison, and mixing/release
 
-### `southeast_ascetic_mountain_funk/` — "Dongnan Shan" funk cover (released)
+### `southeast_ascetic_mountain_funk/`: "Dongnan Shan" funk cover (released)
 
 A direct cover (no lyric adaptation) whose source vocals came from the
-original track via separation + dereverb instead of SynthV — the released
+original track via separation + dereverb instead of SynthV. The released
 video is linked in [Showcase](#showcase):
 
-- `lyrics/final.md` — original Chinese lyrics with a Japanese subtitle gloss
-- `refs/` — ASR-aligned subtitle timing, extracted melody MIDI, cover art
-- `docs/` — MIDI extraction report and the SVC parameter grid
+- `lyrics/final.md`: original Chinese lyrics with a Japanese subtitle gloss
+- `refs/`: ASR-aligned subtitle timing, extracted melody MIDI, cover art
+- `docs/`: MIDI extraction report and the SVC parameter grid
 
 ## Attribution and usage
 
