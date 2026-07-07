@@ -1,4 +1,5 @@
 .idea/
+CLAUDE.md
 *.pth
 *.index
 models/
