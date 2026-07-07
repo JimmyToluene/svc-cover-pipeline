@@ -1,15 +1,12 @@
 # svc-cover-pipeline
 
-A command-line pipeline for producing AI singing covers: source vocals are
-synthesized in Synthesizer V, converted to the target voice with
-[so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc), then mixed,
-subtitled, and rendered into a release video with ffmpeg.
+A command-line pipeline for AI singing covers: Synthesizer V source vocals →
+[so-vits-svc 4.1](https://github.com/svc-develop-team/so-vits-svc) voice
+conversion → mix, subtitles, and release video with ffmpeg.
 
-The repository separates the reusable pipeline from song data: `scripts/` is
-song-agnostic, and each song lives in its own project directory. Every script
-takes `--project <dir>` (default: the `$SVC_PROJECT` environment variable),
-and resolves all of its default paths inside that directory. `sample/` is a
-complete example project taken from a real production.
+`scripts/` is song-agnostic; each song lives in its own project directory,
+selected with `--project <dir>` (default `$SVC_PROJECT`). `sample/` is a
+complete example from a real production.
 
 ## Showcase
 
