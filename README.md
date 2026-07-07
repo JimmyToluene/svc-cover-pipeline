@@ -17,6 +17,7 @@ complete example from a real production.
   </a>
   <p>
     <b>《东南苦行山》但是冬雪莲抱起了贝斯｜东南雪莲山 Funk Remix</b><br>
+    <i>《東南苦行山》でも冬雪蓮がベースを抱えた｜東南雪蓮山 Funk Remix</i><br>
     <i>Dōngnán Xuelian Mountain Funk Remix | Fan-made Meme Edit</i><br>
     <sub>A funk cover of "Dongnan Shan" in Higashi Yukiren's voice:
     separation, SVC, mix, and release video all produced with this pipeline.</sub>
