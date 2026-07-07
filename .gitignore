@@ -8,5 +8,7 @@ inst/
 output/
 __pycache__/
 **/refs/*.mp3
+**/refs/*.wav
+**/refs/*.mp4
 .claude/
 nianzhangshi/

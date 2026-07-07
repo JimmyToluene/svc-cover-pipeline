@@ -13,12 +13,26 @@ complete example project taken from a real production.
 
 ## Contents
 
+- [Showcase](#showcase)
 - [Layout](#layout)
 - [Requirements](#requirements)
 - [Workflow](#workflow)
-- [Sample project](#sample-project)
+- [Example projects](#example-projects)
 - [Attribution and usage](#attribution-and-usage)
 - [License](#license)
+
+## Showcase
+
+<a href="https://www.bilibili.com/video/BV14kMh6WEH9/">
+  <img src="southeast_ascetic_mountain_funk/refs/Cover.png" width="560"
+       alt="Southeast Yukiren Mountain Funk — cover art, links to the Bilibili video">
+</a>
+
+**《东南苦行山》但是冬雪莲抱起了贝斯｜东南雪莲山 Funk** — a funk cover of
+"Dongnan Shan" in Higashi Yukiren's voice, produced end-to-end with this
+pipeline ([watch on Bilibili](https://www.bilibili.com/video/BV14kMh6WEH9/),
+labeled as AI-generated content). Its project files live in
+[`southeast_ascetic_mountain_funk/`](southeast_ascetic_mountain_funk/).
 
 ## Layout
 
@@ -35,7 +49,8 @@ svc-cover-pipeline/
 │   ├── make_release.py       #   static-cover release video
 │   └── make_release_v2.py    #   two-image release video with animated waveform
 ├── requirements.txt
-├── sample/                   # example project — see "Sample project" below
+├── sample/                   # example project — see "Example projects" below
+├── southeast_ascetic_mountain_funk/   # released cover — see "Showcase" above
 └── <project>/                # one directory per song, created by new_project.py
     ├── refs/                 #   reference audio, mora budget, subtitle timing
     ├── lyrics/               #   drafts and final.md (lyrics / romaji / gloss)
@@ -86,20 +101,32 @@ python scripts/make_release_v2.py --project mysong \
 Every script supports `--help`; defaults not listed here follow the
 `<project>/` layout above.
 
-## Sample project
+## Example projects
 
-`sample/` is a snapshot of the text assets from a finished production — a
-Japanese-language cover of "Nian Zhang Shi" converted to the voice of Higashi
-Yukiren. It shows what each part of a project directory looks like in practice:
+Two real productions are included as examples. Audio, video, and model weights
+are excluded (see `.gitignore`); only the text and image assets that document
+the process are kept.
 
-- `sample/lyrics/` — draft revisions (v1 → v3) and `final.md`, a
+### `sample/` — "Nian Zhang Shi" (Japanese adaptation)
+
+A Japanese-language cover with adapted lyrics, converted to the voice of
+Higashi Yukiren. The fullest example of the lyric-writing phases:
+
+- `lyrics/` — draft revisions (v1 → v3) and `final.md`, a
   lyrics / romaji / English-gloss table with per-line mora counts
-- `sample/refs/` — the mora budget and subtitle-timing TSVs, cover art
-- `sample/docs/` — phase-by-phase working notes: mora verification, SynthV
+- `refs/` — the mora budget and subtitle-timing TSVs, cover art
+- `docs/` — phase-by-phase working notes: mora verification, SynthV
   tuning notes, the SVC parameter-grid comparison, and mixing/release notes
 
-Audio, video, and model weights are excluded (see `.gitignore`); only the
-text and image assets that document the process are kept.
+### `southeast_ascetic_mountain_funk/` — "Dongnan Shan" funk cover (released)
+
+A direct cover (no lyric adaptation) whose source vocals came from the
+original track via separation + dereverb instead of SynthV — the released
+video is linked in [Showcase](#showcase):
+
+- `lyrics/final.md` — original Chinese lyrics with a Japanese subtitle gloss
+- `refs/` — ASR-aligned subtitle timing, extracted melody MIDI, cover art
+- `docs/` — MIDI extraction report and the SVC parameter grid
 
 ## Attribution and usage
 
