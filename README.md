@@ -1,4 +1,4 @@
-# AI Cover Pipeline
+# svc-cover-pipeline
 
 A command-line pipeline for producing AI singing covers: source vocals are
 synthesized in Synthesizer V, converted to the target voice with
@@ -7,7 +7,7 @@ subtitled, and rendered into a release video with ffmpeg.
 
 The repository separates the reusable pipeline from song data: `scripts/` is
 song-agnostic, and each song lives in its own project directory. Every script
-takes `--project <dir>` (default: `$AIMAD_PROJECT`, falling back to
+takes `--project <dir>` (default: `$SVC_PROJECT`, falling back to
 `nianzhangshi`) and resolves all of its default paths inside that directory.
 
 ## Layout
@@ -81,3 +81,10 @@ publishing, credit the original composer and lyricist (including the author of
 any lyric version yours derives from) and follow your platform's AI-generated
 content labeling rules. Voice models, audio, and model weights are not tracked
 in this repository.
+
+## License
+
+The pipeline code is licensed under the GNU General Public License v3.0; see
+[LICENSE](LICENSE). Song data under project directories (lyrics, reference
+material) is not covered by this license and remains subject to the rights of
+its original authors.

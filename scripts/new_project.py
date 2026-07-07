@@ -4,7 +4,7 @@
 用法:
   python scripts/new_project.py <工程名或路径>
 
-之后所有脚本加 --project <工程名> 即可指向它(或 export AIMAD_PROJECT=<工程名>)。
+之后所有脚本加 --project <工程名> 即可指向它(或 export SVC_PROJECT=<工程名>)。
 各子目录放什么见 CLAUDE.md 的目录结构说明。
 """
 
